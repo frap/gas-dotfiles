@@ -1,7 +1,7 @@
 #+TITLE:  Emacs Settings for Clojure
-#+AUTHOR: Howard Abrams
-#+EMAIL:  howard.abrams@gmail.com
-#+DATE:   [2014-02-01 Sat]
+#+AUTHOR: Andrés Gasson
+#+EMAIL:  agasson@red-elvis.net
+#+DATE:   [2016-08-26 Fri]
 #+TAGS:   emacs clojure
 
 Me like [[http://clojure.org][Clojure]], and since it is a LISP, then [[https://github.com/clojure-emacs][Emacs likes it]] too.

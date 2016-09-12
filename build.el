@@ -107,7 +107,7 @@
       (load-file (concat dot-files-src "/build.el"))
       (require 'init-main))))
 
-(ha/build-dot-files)  ;; Do it
+(ha/build-dot-files) ;; Do it
 
 (provide 'dot-files)
 ;;; build.el ends here

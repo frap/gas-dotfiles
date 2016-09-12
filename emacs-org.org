@@ -1,6 +1,6 @@
 #+TITLE:  Emacs Org-Mode Settings
-#+AUTHOR: Howard Abrams
-#+EMAIL:  howard.abrams@gmail.com
+#+AUTHOR: Andrés Gasson
+#+EMAIL:  agasson@red-elvis.net
 #+DATE:   [2014-02-01 Sat]
 #+TAGS:   emacs
 
@@ -22,8 +22,8 @@ Emacs love affair.
             org-src-fontify-natively t   ;; Pretty code blocks
             org-src-tab-acts-natively t
             org-confirm-babel-evaluate nil
-            org-todo-keywords '((sequence "TODO(t)" "DOING(g)" "|" "DONE(d)")
-                                (sequence "|" "CANCELED(c)")))
+            org-todo-keywords '((sequence "TODO(t)" "ENCOURS(n)" "|" "FINI(d)")
+                                (sequence "|" "ANNULÉ(c)")))
       (add-to-list 'auto-mode-alist '("\\.txt\\'" . org-mode))
       (add-to-list 'auto-mode-alist '(".*/[0-9]*$" . org-mode))   ;; Journal entries
       (add-hook 'org-mode-hook 'yas-minor-mode-on)
@@ -35,13 +35,13 @@ Emacs love affair.
        'org-mode `(("^\\*+ \\(TODO\\) "  ; shorter, and that is nice canceled
                     (1 (progn (compose-region (match-beginning 1) (match-end 1) "⚑")
                               nil)))
-                   ("^\\*+ \\(DOING\\) "
+                   ("^\\*+ \\(ENCOURS\\) "
                     (1 (progn (compose-region (match-beginning 1) (match-end 1) "⚐")
                               nil)))
-                   ("^\\*+ \\(CANCELED\\) "
+                   ("^\\*+ \\(ANNULÉ\\) "
                     (1 (progn (compose-region (match-beginning 1) (match-end 1) "✘")
                               nil)))
-                   ("^\\*+ \\(DONE\\) "
+                   ("^\\*+ \\(FINI\\) "
                     (1 (progn (compose-region (match-beginning 1) (match-end 1) "✔")
                               nil)))))
 
@@ -108,7 +108,7 @@ Emacs love affair.
        (bind-key "s-`" (surround-text-with "~") org-mode-map))
   #+END_SRC
 
-* Color and Display
+* Colour and Display
 
   Displaying the headers using various bullets are nice for my presentations.
 
@@ -136,7 +136,7 @@ Emacs love affair.
 
 * Journaling
 
-  Didn't realize that [[http://www.emacswiki.org/emacs/OrgJournal][org-journal]] essentially does what I have been
+  Didn't realise that [[http://www.emacswiki.org/emacs/OrgJournal][org-journal]] essentially does what I have been
   doing by hand. With a little customization, I don't have to change
   anything else:
 
@@ -276,9 +276,9 @@ Emacs love affair.
   like them automatically searched when I generate agendas.
 
   #+BEGIN_SRC elisp
-    (setq org-agenda-files '("~/Dropbox/org/personal"
-                             "~/Dropbox/org/technical"
-                             "~/Dropbox/org/project"))
+    (setq org-agenda-files '("~/Dropbox/GTD/inbox.org"
+                             "~/Dropbox/GTD/atea.org"
+                             "~/Dropbox/project"))
   #+END_SRC
 
 * Auto Note Capturing
@@ -293,7 +293,7 @@ Emacs love affair.
 
   #+BEGIN_SRC elisp
      (defvar org-default-notes-file "~/personal/@SUMMARY.org")
-     (defvar org-default-tasks-file "~/personal/tasks.org")
+     (defvar org-default-tasks-file "~/Dropbox/GTD/inbox.org")
   #+END_SRC
 
   This will bring up a list of /note capturing templates/. I actually
@@ -404,7 +404,7 @@ Emacs love affair.
      (use-package ox-reveal
         :init
         (setq org-reveal-root (concat "file://" (getenv "HOME") "/Public/js/reveal.js"))
-        (setq org-reveal-postamble "Howard Abrams"))
+        (setq org-reveal-postamble "Andrés Gasson"))
    #+END_SRC
 
 ** Tree Slide
@@ -473,7 +473,7 @@ Emacs love affair.
      (setq org-confirm-babel-evaluate nil)
    #+END_SRC
 
-** Font Coloring in Code Blocks
+** Font Colouring in Code Blocks
 
    Once upon a time, fontifying individual code blocks made it
    impossible to edit the block without =org-edit-special=. Now that
@@ -496,7 +496,7 @@ Emacs love affair.
   Before you can build this on a new system, make sure that you put
   the cursor over any of these properties, and hit: =C-c C-c=
 
-#+DESCRIPTION: A literate programming version of my Emacs Initialization of Org-Mode
+#+DESCRIPTION: A literate programming version of my Emacs Initialisation of Org-Mode
 #+PROPERTY:    results silent
 #+PROPERTY:    header-args:sh  :tangle no
 #+PROPERTY:    tangle ~/.emacs.d/elisp/init-org-mode.el

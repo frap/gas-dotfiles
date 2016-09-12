@@ -1,6 +1,6 @@
 #+TITLE:  Emacs Configuration File
-#+AUTHOR: Howard Abrams
-#+EMAIL:  howard.abrams@gmail.com
+#+AUTHOR: Andrés Gasson
+#+EMAIL:  agasson@red-elvis.net
 
 * Introduction
 
@@ -126,7 +126,7 @@
      (require 'init-support)
    #+END_SRC
 
-* Package Initialization
+* Package Initialisation
 ** Package Manager
 
    Emacs has become like every other operating system, and now has a
@@ -159,15 +159,30 @@
      (require 'use-package)
    #+END_SRC
 
+** Init File Support
+
+  Load up my collection of enhancements to Emacs Lisp, including dash and s for string manipulation, as much of my initialization code depends on it.
+
+   #+BEGIN_SRC elisp
+     (require 'cl)
+
+     (use-package dash
+       :ensure t
+       :config (eval-after-load "dash" '(dash-enable-font-lock)))
+
+     (use-package s
+       :ensure t)
+   #+END_SRC
+
 * Variables
 
   General settings about me that other packages can use. The biggest
   problem is guessing my email address based on what computer I am using:
 
   #+BEGIN_SRC elisp
-    (if (equal "howard.abrams" user-login-name)
-        (setq user-mail-address "howard.abrams@workday.com")
-      (setq user-mail-address "howard.abrams@gmail.com"))
+    (if (equal "gassona" user-login-name)
+        (setq user-mail-address "andrew.gasson@anz.com")
+      (setq user-mail-address "agasson@ateasystems.com"))
   #+END_SRC
 
 ** Tabs vs Spaces
@@ -188,7 +203,7 @@
 
 ** Encrypting Files
 
-   Synchronize notes formatted in org-mode across multiple computers
+   Synchronise notes formatted in org-mode across multiple computers
    with cloud storage services, like Dropbox? Those files are /cached/
    in various other storage facilities... so, I use symmetric key
    encryption with [[http://en.wikipedia.org/wiki/Pretty_Good_Privacy][PGP]].
@@ -565,20 +580,6 @@
    /clean/, the [[https://github.com/tlh/workgroups.el][workgroups]] project has more features. However, due to
    existing bugs in that project, I've switched to [[https://github.com/pashinin/workgroups2][workgroups2]]:
 
-   #+BEGIN_SRC elisp
-     (use-package workgroups
-       :ensure t
-       :diminish workgroups-mode
-       :init
-       (setq wg-prefix-key (kbd "C-c a")
-             wg-session-file "~/.emacs.d/workgroups"
-             wg-mode-line-display-on nil
-             ;; What to do on Emacs exit / workgroups-mode exit?
-             wg-emacs-exit-save-behavior           'save      ; Options: 'save 'ask nil
-             wg-workgroups-mode-exit-save-behavior 'save)
-       (workgroups-mode 1))
-   #+END_SRC
-
    Short answer for using it:
 
    - ~C-c a c~ to create and name a new /view/
@@ -632,55 +633,13 @@
      (define-key global-map "\M-Q" 'unfill-paragraph)
    #+END_SRC
 
-** General Behavior Fixes
+** General Behaviour Fixes
 
-   The subtle changes I've been making to Emacs behavior has grown
+   The subtle changes I've been making to Emacs behaviour has grown
    until I felt I should move it into [[file:emacs-fixes.org][its own source file]].
 
    #+BEGIN_SRC elisp
      (require 'init-fixes)
-   #+END_SRC
-
-** Multiple Cursors
-
-   I like Magmar's [[https://github.com/emacsmirror/multiple-cursors][multiple-cursors]] project.  It doesn't have any
-    default keybindings, so I set up these:
-
-   #+BEGIN_SRC elisp
-     (use-package multiple-cursors
-       :ensure t
-       :bind (("C-c C-. ."   . mc/mark-all-dwim)
-              ("C-c C-. C-." . mc/mark-all-like-this-dwim)
-              ("C-c C-. n"   . mc/mark-next-like-this)
-              ("C-c C-. p"   . mc/mark-previous-like-this)
-              ("C-c C-. a"   . mc/mark-all-like-this)
-              ("C-c C-. N"   . mc/mark-next-symbol-like-this)
-              ("C-c C-. P"   . mc/mark-previous-symbol-like-this)
-              ("C-c C-. A"   . mc/mark-all-symbols-like-this)
-              ("C-c C-. f"   . mc/mark-all-like-this-in-defun)
-              ("C-c C-. l"   . mc/edit-lines)
-              ("C-c C-. e"   . mc/edit-ends-of-lines)))
-   #+END_SRC
-
-   #+BEGIN_SRC elisp :tangle no
-     (use-package multiple-cursors
-       :ensure t
-       :config
-       (global-set-key
-        (kbd "C-c C-.")
-        (defhydra hydra-multiple-cursors ()
-          "multiple-cursors"
-          ("." mc/mark-all-dwim                   "all-dwim")
-          ("C-." mc/mark-all-like-this-dwim       "all-like-dwim")
-          ("n" mc/mark-next-like-this             "next")
-          ("p" mc/mark-previous-like-this         "previous")
-          ("a" mc/mark-all-like-this              "mark-all")
-          ("N" mc/mark-next-symbol-like-this      "next-symbol")
-          ("P" mc/mark-previous-symbol-like-this  "previous-symbol")
-          ("A" mc/mark-all-symbols-like-this      "all-symbols")
-          ("f" mc/mark-all-like-this-in-defun     "in-func")
-          ("l" mc/edit-lines                      "all-lines")
-          ("e" mc/edit-ends-of-lines              "end-lines"))))
    #+END_SRC
 
 ** Expand Region
@@ -852,69 +811,6 @@
    #+END_SRC
 
 * Loading and Finding Files
-** Projectile
-
-   The [[https://github.com/bbatsov/projectile][Projectile]] project is a nifty way to run commands and search
-   for files in a particular "project". Its necessity is less now that
-   IDO with flexible matching seems to always just find what I need.
-
-   However, I really like the ability to search (with =ag= or =grep=) that
-   is limited to the project:
-
-   #+BEGIN_SRC elisp
-     (use-package projectile
-       :ensure t
-       :init (projectile-global-mode 0)
-       :bind (("C-c p s" . projectile-ag)
-              ("C-c p g" . projectile-grep)))
-   #+END_SRC
-
-   Projectile is currently causing grief to the rest of my system, and
-   while trying to debug it, let's turn it off:
-
-   #+BEGIN_SRC elisp :tangle no
-     (use-package projectile
-       :ensure t
-       :init (projectile-global-mode 0)
-       :commands projectile-ag
-       :config
-       (setq projectile-switch-project-action 'projectile-commander
-             projectile-completion-system 'ido
-             projectile-create-missing-test-files t)
-       (add-to-list 'projectile-globally-ignored-files ".DS_Store")
-
-       (def-projectile-commander-method ?d
-         "Open project root in dired."
-         (projectile-dired))
-
-       (def-projectile-commander-method ?s
-         "Open a *shell* buffer for the project."
-         (projectile-run-shell))
-
-       (def-projectile-commander-method ?F
-         "Git fetch."
-         (magit-status)
-         (call-interactively #'magit-fetch-current))
-
-       (def-projectile-commander-method ?j
-         "Jack-in with Cider."
-         (let* ((opts (projectile-current-project-files))
-                (file (ido-completing-read
-                       "Find file: "
-                       opts
-                       nil nil nil nil
-                       (car (cl-member-if
-                             (lambda (f)
-                               (string-match "core\\.clj\\'" f))
-                             opts)))))
-           (find-file (expand-file-name
-                       file (projectile-project-root)))
-           (run-hooks 'projectile-find-file-hook)
-           (cider-jack-in))))
-   #+END_SRC
-
-  Much of the previous section came from [[http://endlessparentheses.com/improving-projectile-with-extra-commands.html][this essay]].
-
 ** Dired Options
 
    Between =M-!= and starting [[Eshell][Eshell]], comes =dired= (=C-x d=).
@@ -1092,7 +988,8 @@
     [[http://geoff.greer.fm/2011/12/27/the-silver-searcher-better-than-ack/][Silver Searcher]]:
 
     #+BEGIN_SRC sh
-      brew install ag
+      b
+rew install ag
     #+END_SRC
 
     Best part about the ag package, is not needing any configuration
@@ -1360,8 +1257,8 @@
 
        :config
        (setq ispell-program-name "/usr/local/bin/aspell"
-             ispell-dictionary "american" ; better for aspell
-             ispell-extra-args '("--sug-mode=ultra" "--lang=en_US")
+             ispell-dictionary "british" ; better for aspell
+             ispell-extra-args '("--sug-mode=ultra" "--lang=en_NZ")
              ispell-list-command "--list")
 
        (add-to-list 'ispell-local-dictionary-alist '(nil
@@ -1369,7 +1266,7 @@
                                                      "[^[:alpha:]]"
                                                      "['‘’]"
                                                      t
-                                                     ("-d" "en_US")
+                                                     ("-d" "en_NZ")
                                                      nil
                                                      utf-8)))
    #+END_SRC
@@ -1545,7 +1442,7 @@
               bm-cycle-all-buffers t)
         :config
         ;; Make a more bookmarky symbol for a 'mark':
-        (define-fringe-bitmap 'bm-marker-left [254 254 254 254 254 238 198 130] 8 8 'center)
+       ;; (define-fringe-bitmap 'bm-marker-left [254 254 254 254 254 238 198 130] 8 8 'center)
         (let ((fringe-backgd (face-background 'fringe)))
           (set-face-attribute 'bm-fringe-face nil
                               :foreground "green" :background fringe-backgd))
@@ -2221,9 +2118,10 @@
        (if plantuml-jar
            (use-package puml-mode
              :ensure t
-             :init
+             :commands (puml-mode)
+             :init (progn
              (setq puml-plantuml-jar-path plantuml-jar
-                   org-plantuml-jar-path plantuml-jar))))
+                   org-plantuml-jar-path plantuml-jar)))))
    #+END_SRC
 
    And the [[http://ppareit.github.com/graphviz-dot-mode/][mode for Graphviz]]:

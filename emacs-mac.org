@@ -1,7 +1,7 @@
 #+TITLE:  Macintosh Configuration for Emacs
-#+AUTHOR: Howard
-#+EMAIL:  howard.abrams@gmail.com
-#+DATE:   2014 Mar 22
+#+AUTHOR: Andrés Gasson
+#+EMAIL:  Agasson@red-elvis.net
+#+DATE:   2016 Sept 10
 #+TAGS:   emacs
 
 The settings in this file are only included on a Macintosh, and even
@@ -9,7 +9,7 @@ then, only during a graphical run.
 
 * Key Bindings
 
-  Not going to use the Escape key as my Meta key ... that is what the
+  Not going to use the Escape key as my Meta key (note! Gas) ... that is what the
   Option key should be:
 
   #+BEGIN_SRC elisp

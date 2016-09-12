@@ -1,7 +1,7 @@
 #+TITLE:  Emacs Mode-Line
-#+AUTHOR: Howard Abrams
-#+EMAIL:  howard.abrams@gmail.com
-#+DATE:   [2014-02-28 Fri]
+#+AUTHOR: Andrés Gasson
+#+EMAIL:  agasson@red-elvis.net
+#+DATE:   [2016-09-10 Thu]
 #+TAGS:   emacs
 
 * Which Function Mode
