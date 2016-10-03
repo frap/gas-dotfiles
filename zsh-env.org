@@ -1,6 +1,6 @@
 #+TITLE:     ZShell Environment Startup File
-#+AUTHOR:    Howard Abrams
-#+EMAIL:     howard.abrams@gmail.com
+#+AUTHOR:    Andrew Gasson
+#+EMAIL:     agasson@ateasystems.com
 
 This startup file is always loaded, even for /non-interactive/ shell
 scripts, so this file should be light and only contain environment
@@ -113,4 +113,3 @@ between my other scripts, but so far I haven't thought of anything.
 #+PROPERTY: comments org
 #+PROPERTY: shebang #!/usr/local/bin/zsh
 #+DESCRIPTION: Global environment variables for ZShell
-

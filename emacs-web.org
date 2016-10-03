@@ -1,6 +1,6 @@
 #+TITLE:  Emacs Settings for Web Programming
-#+AUTHOR: Howard Abrams
-#+EMAIL:  howard.abrams@gmail.com
+#+AUTHOR: Andrés Gasson
+#+EMAIL:  agasson@red-elvis.net
 #+DATE:   [2014-02-01 Sat][2014-02-01 Sat]
 #+TAGS:   emacs web
 
@@ -73,8 +73,7 @@
   Useful key-bindings with the =skewer-setup=:
 
   - =C-x C-e= :: Evaluate the form before the point and display the result in the
-  - =minibuffer. If given a prefix argument, insert the result into the current
-  - =buffer.
+  minibuffer. If given a prefix argument, insert the result into the current =buffer.
   - =C-M-x= :: Evaluate the top-level form around the point.
   - =C-c C-k= :: Load the current buffer.
   - =C-c C-z= :: Select the REPL buffer.

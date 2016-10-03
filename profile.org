@@ -1,12 +1,11 @@
 #+TITLE:  Shell Dot Profile
-#+AUTHOR: Howard Abrams
-#+EMAIL:  howard.abrams@gmail.com
-#+DATE:   [2013-12-06 Fri]
+#+AUTHOR: Andrés Gasson
+#+EMAIL:  agasson@red-elvis.net
+#+DATE:   [2016-09-30 Fri]
 #+TAGS:   zsh shell
 
 This generates my =.profile= that contains environment variables and
-similar settings applicable to all my shells. Yeah, I'm some-what of
-a shell-slut, and dabble between Zshell and Fish.
+similar settings applicable to all my shells.
 
 * Homebrew
 
@@ -20,7 +19,7 @@ a shell-slut, and dabble between Zshell and Fish.
 
   if [ ! -d /usr/local/Cellar -a -n "$ON_A_MAC" ]
   then
-    echo "ZOMG! No Homebrew installed! Installing now..."
+    echo "WTF! No Homebrew installed! Installing now..."
     ruby -e "`curl -fsSL https://raw.github.com/mxcl/homebrew/go/install`"
   fi
 #+END_SRC
@@ -45,6 +44,8 @@ Type "help", "copyright", "credits" or "license" for more information.
 
   #+BEGIN_SRC sh :tangle no
     brew install thefuck
+    ;or for linux
+    sudo -H pip install thefuck
   #+END_SRC
 
   And then include it in this =.profile= file:
@@ -79,8 +80,14 @@ Type "help", "copyright", "credits" or "license" for more information.
   I built from Homebrew:
 
 #+BEGIN_SRC sh
-  export ALTERNATE_EDITOR=/usr/local/bin/emacs
-  export EDITOR=/usr/local/bin/emacsclient
+  if [ $ON_A_MAC -eq 1 ]
+   then
+    export ALTERNATE_EDITOR=/usr/local/bin/emacs
+    export EDITOR=/usr/local/bin/emacsclient
+   else
+    export ALTERNATE_EDITOR=/usr/bin/emacs
+    export EDITOR=/usr/bin/emacsclient
+  fi
 #+END_SRC
 
 * Global Aliases
@@ -181,7 +188,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 
 * Ruby
 
-  Install [[https://rvm.io/][RVM]] via:
+  I'm not using ruby as yet but if I did then - Install [[https://rvm.io/][RVM]] via:
 
   #+BEGIN_SRC sh :tangle no
     gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3
@@ -190,7 +197,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 
   And then just source the following:
 
-  #+BEGIN_SRC sh
+  #+BEGIN_SRC sh :tangle no
     source $HOME/.rvm/scripts/rvm
   #+END_SRC
 
@@ -246,9 +253,9 @@ Type "help", "copyright", "credits" or "license" for more information.
         if [[ $PWD == $HOME ]]
         then
             echo -n '~'
-        elif [[ $PWD == $HOME/Work ]]
+        elif [[ $PWD == $HOME/Dev ]]
         then
-            echo -n '~/Work'
+            echo -n '~/Dev'
 
              # In a Git project?
         elif PRJ=$(git rev-parse --show-toplevel 2>/dev/null)
@@ -258,9 +265,9 @@ Type "help", "copyright", "credits" or "license" for more information.
             echo -n "$(sed -e 's/ / /g' <<< [$name])$(_trim_dir $rest)"
 
              # In work-related directory...
-        elif [[ $PWD == $HOME/Work/* ]]
+        elif [[ $PWD == $HOME/Dev/* ]]
         then
-            name=$(sed -E "s|$HOME/Work/([[:alnum:]_-]+).*|\1|; s/ / /g" <<< $PWD)
+            name=$(sed -E "s|$HOME/Dev/([[:alnum:]_-]+).*|\1|; s/ / /g" <<< $PWD)
             base=$(basename $PWD)
             intr=$(basename `dirname $PWD`)
 

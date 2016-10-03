@@ -22,7 +22,7 @@ Emacs love affair.
             org-src-fontify-natively t   ;; Pretty code blocks
             org-src-tab-acts-natively t
             org-confirm-babel-evaluate nil
-            org-todo-keywords '((sequence "TODO(t)" "ENCOURS(n)" "|" "FINI(d)")
+            org-todo-keywords '((sequence "TODO(t)" "PROCHAIN(n)" "|" "FINI(d)")
                                 (sequence "|" "ANNULÉ(c)")))
       (add-to-list 'auto-mode-alist '("\\.txt\\'" . org-mode))
       (add-to-list 'auto-mode-alist '(".*/[0-9]*$" . org-mode))   ;; Journal entries
@@ -35,7 +35,7 @@ Emacs love affair.
        'org-mode `(("^\\*+ \\(TODO\\) "  ; shorter, and that is nice canceled
                     (1 (progn (compose-region (match-beginning 1) (match-end 1) "⚑")
                               nil)))
-                   ("^\\*+ \\(ENCOURS\\) "
+                   ("^\\*+ \\(PROCHAIN\\) "
                     (1 (progn (compose-region (match-beginning 1) (match-end 1) "⚐")
                               nil)))
                    ("^\\*+ \\(ANNULÉ\\) "
@@ -278,7 +278,7 @@ Emacs love affair.
   #+BEGIN_SRC elisp
     (setq org-agenda-files '("~/Dropbox/GTD/inbox.org"
                              "~/Dropbox/GTD/atea.org"
-                             "~/Dropbox/project"))
+                             "~/Dropbox/atea"))
   #+END_SRC
 
 * Auto Note Capturing

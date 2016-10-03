@@ -39,7 +39,7 @@ things here are for callable functions, aliases and the like.
   and auto load the =compinit=. I suppose it wouldn't hurt, eh?
 
 #+BEGIN_SRC sh
-  zstyle :compinstall filename '/Users/howard.abrams/.zshrc'
+  zstyle :compinstall filename '~/.zshrc'
 #+END_SRC
 
   Add my own custom completion scripts:
@@ -71,7 +71,7 @@ things here are for callable functions, aliases and the like.
   The plugins are in =~/.oh-my-zsh/plugins/*=
 
 #+BEGIN_SRC sh
-  plugins=(osx terminalapp gnu-utils lein npm)
+  plugins=(osx terminalapp gnu-utils lein npm git)
 #+END_SRC
 
   I use [[http://mxcl.github.com/homebrew/][Homebrew]] on my home computers, but [[http://www.macports.org][MacPorts]] at work.

@@ -1,7 +1,7 @@
 #+TITLE:  Emacs for Linux
-#+AUTHOR: Howard Abrams
-#+EMAIL:  howard.abrams@gmail.com
-#+DATE:   2014 Aug 28
+#+AUTHOR: Andres Gasson
+#+EMAIL:  agasson@red-elvis.net
+#+DATE:   2016 Sep 26
 #+TAGS:   emacs linux
 
 Mostly key bindings for the Super key to work as a Command key on

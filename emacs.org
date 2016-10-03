@@ -95,11 +95,11 @@
             (fulldirs (mapcar (lambda (d) (ha/emacs-subdirectory d)) subdirs)))
        (dolist (dir fulldirs)
          (when (not (file-exists-p dir))
-           (message "Make directory: %s" dir)
+           (message "Making directory: %s" dir)
            (make-directory dir))))
    #+END_SRC
 
-** Customization Section
+** Customisation Section
 
    While I would rather program my configurations, sometimes the Emacs
    menu system is "good enough", but I want it in its own file:
@@ -119,10 +119,11 @@
      (add-to-list 'load-path (ha/emacs-subdirectory "elisp"))
    #+END_SRC
 
-   Load up my special collection of enhancements to Emacs Lisp:
+   Load up my special collection of enhancements to Emacs Lisp -
+   common-lisp and init-support:
 
    #+BEGIN_SRC elisp
-     (require 'cl)
+     (require 'cl-lib)
      (require 'init-support)
    #+END_SRC
 
@@ -2091,7 +2092,9 @@ rew install ag
    #+BEGIN_SRC elisp
      (use-package markdown-mode
        :ensure t
-       :mode ("\\.\\(m\\(ark\\)?down\\|md\\)$" . markdown-mode)
+       :mode (("\\.\\(m\\(ark\\)?down\\|md\\)$" . markdown-mode)
+              ("README\\.md\\'" . gfm-mode))
+       :init (setq markdown-command "multimarkdown")
        :config
        (bind-key "A-b" (surround-text-with "+*") markdown-mode-map)
        (bind-key "s-b" (surround-text-with "**") markdown-mode-map)

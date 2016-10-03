@@ -10,11 +10,18 @@ then, only during a graphical run.
 * Key Bindings
 
   Not going to use the Escape key as my Meta key (note! Gas) ... that is what the
-  Option key should be:
+  Option key should be. Also path is broken on windows mac so need
+  the exec-path-from-shell package:
 
   #+BEGIN_SRC elisp
     (setq mac-option-modifier 'meta)
     (setq mac-command-modifier 'super)
+
+    (use-package exec-path-from-shell
+      :ensure t)
+
+   (when (memq window-system '(mac ns))
+    (exec-path-from-shell-initialize))
   #+END_SRC
 
   Once upon a time, I thought I would get confused and hit a
@@ -162,7 +169,7 @@ then, only during a graphical run.
   Before you can build this on a new system, make sure that you put
   the cursor over any of these properties, and hit: =C-c C-c=
 
-#+DESCRIPTION: A literate programming version of my Emacs Initialization for Mac OSX
+#+DESCRIPTION: A literate programming version of my Emacs Initialisation for Mac OSX
 #+PROPERTY:    results silent
 #+PROPERTY:    header-args:sh  :tangle no
 #+PROPERTY:    tangle ~/.emacs.d/elisp/init-mac.el
