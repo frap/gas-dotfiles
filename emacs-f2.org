@@ -1,7 +1,7 @@
 #+TITLE:  F2 Keybindings for Emacs
-#+AUTHOR: Howard
-#+EMAIL:  howard.abrams@gmail.com
-#+DATE:   2015 Jan 04
+#+AUTHOR: Andrés Gasson
+#+EMAIL:  gas@ateasystems.com
+#+DATE:   2016 Oct 08
 #+TAGS:   technical emacs
 
 The *F2* is used to enter odd characters not normally available or
@@ -158,7 +158,7 @@ phrases I want to type a bit too often.
   doesn’t immediately solve?
 
   #+BEGIN_SRC elisp
-    (define-key f2-global-map (kbd "H") "Howard Abrams")
+    (define-key f2-global-map (kbd "G") "Andrés Gasson")
   #+END_SRC
 
 * Technical Artifacts
@@ -172,7 +172,7 @@ phrases I want to type a bit too often.
   Before you can build this on a new system, make sure that you put
   the cursor over any of these properties, and hit: =C-c C-c=
 
-#+DESCRIPTION: A literate programming version of my Emacs Initialization for Graphical Clients
+#+DESCRIPTION: A literate programming version of my Emacs Initialisation for Graphical Clients
 #+PROPERTY:    results silent
 #+PROPERTY:    header-args:sh  :tangle no
 #+PROPERTY:    tangle ~/.emacs.d/elisp/init-f2.el

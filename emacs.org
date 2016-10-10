@@ -1841,7 +1841,7 @@ rew install ag
 ** Emacs Lisp
 
    Sure, everything here is in Emacs Lisp, but this section helps me
-   write more of that... like making snazzy symbols and colorizing the
+   write more of that... like making snazzy symbols and colorising the
    variables.
 
    The [[https://github.com/ankurdave/color-identifiers-mode][color-identifiers]] project (unlike [[https://github.com/Fanael/rainbow-identifiers][others]]), downplay the
@@ -1895,9 +1895,9 @@ rew install ag
           (add-hook 'emacs-lisp-mode-hook 'paredit-mode))
     #+END_SRC
 
-*** Colored Variables
+*** Coloured Variables
 
-    Color each variable, and downplay standard key words:
+    Colour each variable, and downplay standard key words:
 
     #+BEGIN_SRC elisp
       (use-package color-identifiers-mode
@@ -1955,7 +1955,6 @@ rew install ag
 ** Clojure
 
    See [[file:emacs-clojure.org][emacs-clojure.el]] for details on working with [[http://clojure.org][Clojure]].
-   Not sure if I should just load it directly, like:
 
    #+BEGIN_SRC elisp
      (require 'init-clojure)
@@ -2000,7 +1999,7 @@ rew install ag
 
    See [[file:emacs-javascript.org][emacs-javascript.el]] for details on working with JavaScript.
 
-   #+BEGIN_SRC elisp :tangle no
+   #+BEGIN_SRC elisp
      (require 'init-javascript)
    #+END_SRC
 
