@@ -1,6 +1,6 @@
 #+TITLE:     Shell Profile
-#+AUTHOR:    Howard Abrams
-#+EMAIL:     howard.abrams@gmail.com
+#+AUTHOR:    Andrew Gasson
+#+EMAIL:     agasson@ateasystems.com
 
 Common functions and aliases that I can share among all my computers.
 This file is written to =$HOME/.bash.all.rc= and should be called

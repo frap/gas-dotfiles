@@ -25,7 +25,7 @@
 (require 'ob)          ;; org-mode export system
 (require 'ob-tangle)   ;; org-mode tangling process
 
-;; My special functions for doing script are not in a loadable location.q
+;; My special functions for doing script are not in a loadable location.
 (defvar script-funcs-src (concat (file-name-directory (buffer-file-name))
                                  "elisp/shell-script-funcs.el"))
 (require 'shell-script-funcs script-funcs-src)

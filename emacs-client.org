@@ -381,7 +381,7 @@ other systems with a graphical front-end.
   Before you can build this on a new system, make sure that you put
   the cursor over any of these properties, and hit: =C-c C-c=
 
-#+DESCRIPTION: A literate programming version of my Emacs Initialization for Graphical Clients
+#+DESCRIPTION: A literate programming version of my Emacs Initialisation for Graphical Clients
 #+PROPERTY:    results silent
 #+PROPERTY:    tangle ~/.emacs.d/elisp/init-client.el
 #+PROPERTY:    eval no-export
