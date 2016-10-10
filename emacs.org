@@ -1,5 +1,5 @@
 #+TITLE:  Emacs Configuration File
-#+AUTHOR: Andrés Gasson
+#+AUTHOR: Andrés Gasson staright copy form Howard Abrahms
 #+EMAIL:  agasson@red-elvis.net
 
 * Introduction
@@ -10,7 +10,7 @@
 
 ** Emacs Executable
 
-   While I often use [[http://emacsformacosx.com/builds][Emacs for Mac]], lately, I've been building Emacs
+   While Howard often uses [[http://emacsformacosx.com/builds][Emacs for Mac]], lately, I've been building Emacs
    from source using [[http://brew.sh/][Homebrew]]. I start by adding the following dependency:
 
    #+BEGIN_SRC sh :tangle no
@@ -1957,7 +1957,7 @@ rew install ag
    See [[file:emacs-clojure.org][emacs-clojure.el]] for details on working with [[http://clojure.org][Clojure]].
    Not sure if I should just load it directly, like:
 
-   #+BEGIN_SRC elisp :tangle no
+   #+BEGIN_SRC elisp
      (require 'init-clojure)
    #+END_SRC
 

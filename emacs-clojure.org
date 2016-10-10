@@ -172,7 +172,8 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
            (paredit-delete-indentation))))
   #+END_SRC
 
-  Bind these previous functions and add it to the =clojure-mode=:
+  Bind these previous functions (ESC-^ delete indentation, CTRL-^
+  remove-newlines) and add it to the =clojure-mode=:
 
   #+BEGIN_SRC elisp
     (use-package paredit
@@ -217,6 +218,7 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
   - =cider-jack-in= - For starting an nREPL server and setting
     everything up. Keyboard: =C-c M-j=
   - =cider= to connect to an existing nREPL server.
+  * C-c C-v C-c send-and-evaluate-sexp
 
   #+BEGIN_SRC elisp
     (use-package cider
@@ -238,9 +240,9 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
       (add-hook 'cider-mode-hook 'company-mode)
 
       (add-hook 'cider-repl-mode-hook 'paredit-mode)
-      (add-hook 'cider-repl-mode-hook 'superword-mode)
+  ;;    (add-hook 'cider-repl-mode-hook 'superword-mode)
       (add-hook 'cider-repl-mode-hook 'company-mode)
-      (add-hook 'cider-test-report-mode 'jcf-soft-wrap)
+  ;;    (add-hook 'cider-test-report-mode 'jcf-soft-wrap)
 
       :bind (:map cider-mode-map
              ("C-c C-v C-c" . cider-send-and-evaluate-sexp)
@@ -253,7 +255,7 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
   What about doing the evaluation but re-inserting the results as a
   comment at the end of the expression? Let's create a function that
   will insert a comment character if we aren't already in a comment,
-  and we will then advice the Cider function that prints the results:
+  and we will then advise the Cider function that prints the results:
 
   #+BEGIN_SRC elisp
     (defun ha/cider-append-comment ()
@@ -305,7 +307,7 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
 
 * Refactoring
 
-  Using the [[https://github.com/clojure-emacs/clj-refactor.el][clj-refactor]] project:
+  Using the [[https://github.com/clojure-emacs/clj-refactor.el][clj-refactor]] (C-c . to refactor) project:
 
   #+BEGIN_SRC elisp
     (use-package clj-refactor
