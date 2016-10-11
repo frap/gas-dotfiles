@@ -17,11 +17,11 @@ between my other scripts, but so far I haven't thought of anything.
   ZSH=$HOME/.oh-my-zsh
 #+END_SRC
 
-  Use my own [[file:zsh-theme.org][Happiness Zsh theme]] (stored in the =~/.oh-my-zsh/themes=
+  Use my own [[file:zsh-theme.org][Gas lambda Zsh theme]] (stored in the =~/.oh-my-zsh/themes=
   directory.
 
 #+BEGIN_SRC sh
-  ZSH_THEME="happiness"
+  ZSH_THEME="gas-lambda"
 #+END_SRC
 
   Disable autosetting terminal title.
@@ -36,11 +36,10 @@ between my other scripts, but so far I haven't thought of anything.
   COMPLETION_WAITING_DOTS="true"
 #+END_SRC
 
-  Disable bi-weekly auto-update checks of Oh My Zsh.
-  This has caused problems for me. I will update by hand.
+  Dont Disable bi-weekly auto-update checks of Oh My Zsh.
 
 #+BEGIN_SRC sh
-  DISABLE_AUTO_UPDATE="true"
+  DISABLE_AUTO_UPDATE="false"
 #+END_SRC
 
 ** History
@@ -111,5 +110,5 @@ between my other scripts, but so far I haven't thought of anything.
 
 #+PROPERTY: tangle ~/.zshenv
 #+PROPERTY: comments org
-#+PROPERTY: shebang #!/usr/local/bin/zsh
+#+PROPERTY: shebang #!/usr/bin/env zsh
 #+DESCRIPTION: Global environment variables for ZShell

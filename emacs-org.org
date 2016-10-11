@@ -292,7 +292,7 @@ Emacs love affair.
   Google Task list are stored in [[file:~/personal/tasks.org][tasks.org]]:
 
   #+BEGIN_SRC elisp
-     (defvar org-default-notes-file "~/personal/@SUMMARY.org")
+     (defvar org-default-notes-file "~/Dropbox/@SUMMARY.org")
      (defvar org-default-tasks-file "~/Dropbox/GTD/inbox.org")
   #+END_SRC
 

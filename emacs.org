@@ -181,9 +181,9 @@
   problem is guessing my email address based on what computer I am using:
 
   #+BEGIN_SRC elisp
-    (if (equal "gassona" user-login-name)
-        (setq user-mail-address "andrew.gasson@anz.com")
-      (setq user-mail-address "agasson@ateasystems.com"))
+    (if (equal "atearoot" user-login-name)
+        (setq user-mail-address "agasson@ateasystems.com")
+      (setq user-mail-address "agasson@red-elvis.net"))
   #+END_SRC
 
 ** Tabs vs Spaces

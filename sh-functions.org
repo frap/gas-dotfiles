@@ -250,8 +250,8 @@ function dash {
   some functions that give the files in the /default locations/.
 
 #+BEGIN_SRC sh
-  export NOTEPATH="$HOME/Notes"
-  for FILE in $HOME/Technical $HOME/Personal
+  export NOTEPATH="$HOME/Dropbox/Notes"
+  for FILE in $HOME/Dropbox/Technical $HOME/Dropbox/Personal
   do
     if [ -e "$FILE" ]; then
       NOTEPATH="$FILE:$NOTEPATH"
@@ -435,7 +435,7 @@ export LESS='-R'
 ** Pull
 
    Allows me to pull new information from the remote branch, but not
-   loose anything.
+   lose anything.
 
 #+BEGIN_SRC sh
 function pull {
@@ -489,8 +489,8 @@ alias gf-changed='git status --porcelain | grep "^ M" | cut -c4-'
   unalias g >/dev/null 2>&1
   unalias d >/dev/null 2>&1
 
-  if [ -e ~/.bash.d/bashmarks.sh ]
+  if [ -e ~/bin/bashmarks.sh ]
   then
-      source ~/.bash.d/bashmarks.sh
+      source ~/bin/bashmarks.sh
   fi
 #+END_SRC
