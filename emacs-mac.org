@@ -1,8 +1,8 @@
 #+TITLE:  Macintosh Configuration for Emacs
 #+AUTHOR: Andrés Gasson
-#+EMAIL:  Agasson@red-elvis.net
-#+DATE:   2016 Sept 10
-#+TAGS:   emacs
+#+EMAIL:  agasson@red-elvis.net
+#+DATE:   2016 Oct 10
+#+TAGS:   emacs,mac
 
 The settings in this file are only included on a Macintosh, and even
 then, only during a graphical run.

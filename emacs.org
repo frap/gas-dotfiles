@@ -1,11 +1,12 @@
 #+TITLE:  Emacs Configuration File
-#+AUTHOR: Andrés Gasson staright copy form Howard Abrahms
+#+AUTHOR: Andrés Gasson straight copy from Howard Abrahms
 #+EMAIL:  agasson@red-elvis.net
-
+#+DATE:   [201]
 * Introduction
 
   This is my =.emacs= file ... well, the top-level of it anyway.
   I've written it in a [[http://www.orgmode.org][literate style]], to make it easy to explain.
+  Most of this is stolen from Howard Abrahms and Sasha Chua.
   The notes also include hyperlinks to where I stole it. ;-)
 
 ** Emacs Executable
@@ -67,7 +68,6 @@
 
    I only load this from a "normal" Emacs distribution, which
    allows me to play around with [[http://aquamacs.org/][Aquamacs]] and [[http://eschulte.github.io/emacs-starter-kit/][Starter Kits]].
-   You know, to see what I may be missing.
 
 * General Settings
 ** My Directory Location
@@ -80,9 +80,9 @@
    Any way, I have a new global variable for that:
 
    #+BEGIN_SRC elisp
-     (defconst ha/emacs-directory (concat (getenv "HOME") "/.emacs.d/"))
+     (defconst gas/emacs-directory (concat (getenv "HOME") "/.emacs.d/"))
 
-     (defun ha/emacs-subdirectory (d) (expand-file-name d ha/emacs-directory))
+     (defun gas/emacs-subdirectory (d) (expand-file-name d gas/emacs-directory))
    #+END_SRC
 
 ** Directory Structure
@@ -92,7 +92,7 @@
 
    #+BEGIN_SRC elisp
      (let* ((subdirs '("elisp" "backups"))
-            (fulldirs (mapcar (lambda (d) (ha/emacs-subdirectory d)) subdirs)))
+            (fulldirs (mapcar (lambda (d) (gas/emacs-subdirectory d)) subdirs)))
        (dolist (dir fulldirs)
          (when (not (file-exists-p dir))
            (message "Making directory: %s" dir)
@@ -105,7 +105,7 @@
    menu system is "good enough", but I want it in its own file:
 
    #+BEGIN_SRC elisp
-     (setq custom-file (expand-file-name "custom.el" ha/emacs-directory))
+     (setq custom-file (expand-file-name "custom.el" gas/emacs-directory))
      (when (file-exists-p custom-file)
        (load custom-file))
    #+END_SRC
@@ -116,7 +116,7 @@
    personal stash at: =$HOME/.emacs.d/elisp=
 
    #+BEGIN_SRC elisp
-     (add-to-list 'load-path (ha/emacs-subdirectory "elisp"))
+     (add-to-list 'load-path (gas/emacs-subdirectory "elisp"))
    #+END_SRC
 
    Load up my special collection of enhancements to Emacs Lisp -
@@ -232,9 +232,7 @@
 
 * Display Settings
 
-  I've been using Emacs for many years, and appreciate a certain
-  minimalist approach to its display. While you can turn these off
-  with the menu items now, it is just as easy to set them here.
+  Remove surpfulous fluff from display.
 
   #+BEGIN_SRC elisp
     (setq initial-scratch-message "") ;; Uh, I know what Scratch is for
@@ -247,6 +245,14 @@
       (scroll-bar-mode -1))            ;; Scrollbars are waste screen estate
   #+END_SRC
 
+*** Winner mode
+  Winner-mode lets you use =C-c <left>= and =C-c <right>= to switch
+  between windows configurations.
+
+  #+BEGIN_SRC elisp
+  (use-package winner
+     :defer t)
+  #+END_SRC
   Most of the display settings actually come from the [[file:emacs-mac.org][Mac initialization file]].
 
 ** Whitespace Mode
@@ -395,7 +401,7 @@
    begin by highlighting lines in *.log files.
 
    #+BEGIN_SRC elisp
-     (defun ha/highlite-logs ()
+     (defun gas/highlite-logs ()
        "Highlight certain lines in specific files.  Currently, only log files are supported."
        (interactive)
        (when (equal "log" (file-name-extension (buffer-file-name)))
@@ -408,7 +414,7 @@
    allows me to hook it to the loading of any file:
 
    #+BEGIN_SRC elisp :tangle no
-     (add-hook 'find-file-hook 'ha/highlite-logs)
+     (add-hook 'find-file-hook 'gas/highlite-logs)
    #+END_SRC
 
    Turn on specific word groupings for specific occasions. We begin
@@ -416,7 +422,7 @@
    the end of a sprint.
 
    #+BEGIN_SRC elisp
-     (defun ha/sprint-retrospective-highlighting ()
+     (defun gas/sprint-retrospective-highlighting ()
        "Highlight the good, the bad and the improvements to make when taking notes."
        (interactive)
        (hi-lock-mode t)
@@ -435,7 +441,7 @@
      (use-package fancy-narrow
        :ensure t
        :config
-       (defun ha/highlight-block ()
+       (defun gas/highlight-block ()
          "Highlights a 'block' in a buffer defined by the first blank
           line before and after the current cursor position. Uses the
           'fancy-narrow' mode to high-light the block."
@@ -448,7 +454,7 @@
            (fancy-narrow-to-region beg end)
            (goto-char cur)))
 
-       (defun ha/highlight-section (num)
+       (defun gas/highlight-section (num)
          "If some of the buffer is highlighted with the `fancy-narrow'
           mode, then un-highlight it by calling `fancy-widen'.
 
@@ -462,12 +468,12 @@
          (cond
           ((fancy-narrow-active-p)  (fancy-widen))
           ((region-active-p)        (fancy-narrow-to-region (region-beginning) (region-end)))
-          ((= num 0)                (ha/highlight-block))
+          ((= num 0)                (gas/highlight-block))
           ((= num 1)                (fancy-narrow-to-defun))
-          (t                        (progn (ha/expand-region num)
+          (t                        (progn (gas/expand-region num)
                                            (fancy-narrow-to-region (region-beginning) (region-end))))))
 
-       :bind ("C-M-+" . ha/highlight-section))
+       :bind ("C-M-+" . gas/highlight-section))
    #+END_SRC
 
    This nifty function from [[http://endlessparentheses.com/emacs-narrow-or-widen-dwim.html][Endless Parenthesis]] is a nice replacement
@@ -531,7 +537,7 @@
 
    #+BEGIN_SRC elisp
      (global-unset-key (kbd "C-c w"))
-     (global-set-key (kbd "C-c w r") 'ha/window-standard-size)
+     (global-set-key (kbd "C-c w r") 'gas/window-standard-size)
    #+END_SRC
 
    If I've enlarged the window, I can restore that window to its
@@ -545,7 +551,7 @@
    original size if already at 80.
 
    #+BEGIN_SRC elisp
-     (defun ha/window-standard-size (arg)
+     (defun gas/window-standard-size (arg)
        "Set size of the current window to 80 characters.
      If already is 80 characters, reset to its previous size.  A
      prefix ARG can be given to set the window to a particular width."
@@ -662,7 +668,7 @@
      (use-package expand-region
        :ensure t
        :config
-       (defun ha/expand-region (lines)
+       (defun gas/expand-region (lines)
          "Prefix-oriented wrapper around Magnar's `er/expand-region'.
 
      Call with LINES equal to 1 (given no prefix), it expands the
@@ -672,21 +678,21 @@
      specified.  Select the current line if the LINES prefix is zero."
          (interactive "p")
          (cond ((= lines 1)   (er/expand-region 1))
-               ((< lines 0)   (ha/expand-previous-line-as-region lines))
-               (t             (ha/expand-next-line-as-region (1+ lines)))))
+               ((< lines 0)   (gas/expand-previous-line-as-region lines))
+               (t             (gas/expand-next-line-as-region (1+ lines)))))
 
-       (defun ha/expand-next-line-as-region (lines)
+       (defun gas/expand-next-line-as-region (lines)
          (message "lines = %d" lines)
          (beginning-of-line)
          (set-mark (point))
          (end-of-line lines))
 
-       (defun ha/expand-previous-line-as-region (lines)
+       (defun gas/expand-previous-line-as-region (lines)
          (end-of-line)
          (set-mark (point))
          (beginning-of-line (1+ lines)))
 
-       :bind ("C-=" . ha/expand-region))
+       :bind ("C-=" . gas/expand-region))
    #+END_SRC
 
 ** Block Wrappers
@@ -965,7 +971,8 @@
      (use-package helm
        :ensure t
        :init
-       (use-package helm-config))   ;; Binds C-x c to the helm bidness.
+       (use-package helm-config)
+       )   ;; Binds C-x c to the helm bidness.
    #+END_SRC
 
    Re-read [[http://tuhdo.github.io/helm-intro.html][this essay on Helm]].
@@ -989,8 +996,7 @@
     [[http://geoff.greer.fm/2011/12/27/the-silver-searcher-better-than-ack/][Silver Searcher]]:
 
     #+BEGIN_SRC sh
-      b
-rew install ag
+      brew install ag
     #+END_SRC
 
     Best part about the ag package, is not needing any configuration
@@ -1120,7 +1126,7 @@ rew install ag
    #+BEGIN_SRC elisp
      (setq backup-directory-alist
            `(("." . ,(expand-file-name
-                      (ha/emacs-subdirectory "backups")))))
+                      (gas/emacs-subdirectory "backups")))))
    #+END_SRC
 
    Make backups of files, even when they're in version control
@@ -1150,7 +1156,7 @@ rew install ag
    #+BEGIN_SRC elisp
      (use-package autoinsert
        :init
-       (setq auto-insert-directory (ha/emacs-subdirectory "templates/"))
+       (setq auto-insert-directory (gas/emacs-subdirectory "templates/"))
        ;; Don't want to be prompted before insertion:
        (setq auto-insert-query nil)
 
@@ -1168,7 +1174,7 @@ rew install ag
    and for that Yasnippet is better, so in this case, we combine them:
 
    #+BEGIN_SRC elisp
-     (defun ha/autoinsert-yas-expand()
+     (defun gas/autoinsert-yas-expand()
        "Replace text in yasnippet template."
        (yas-expand-snippet (buffer-string) (point-min) (point-max)))
    #+END_SRC
@@ -1178,10 +1184,10 @@ rew install ag
    #+BEGIN_SRC elisp
      (use-package autoinsert
        :config
-       (define-auto-insert "\\.el$" ["default-lisp.el" ha/autoinsert-yas-expand])
-       (define-auto-insert "\\.sh$" ["default-sh.sh" ha/autoinsert-yas-expand])
-       (define-auto-insert "/bin/"  ["default-sh.sh" ha/autoinsert-yas-expand])
-       (define-auto-insert "\\.html?$" ["default-html.html" ha/autoinsert-yas-expand]))
+       (define-auto-insert "\\.el$" ["default-lisp.el" gas/autoinsert-yas-expand])
+       (define-auto-insert "\\.sh$" ["default-sh.sh" gas/autoinsert-yas-expand])
+       (define-auto-insert "/bin/"  ["default-sh.sh" gas/autoinsert-yas-expand])
+       (define-auto-insert "\\.html?$" ["default-html.html" gas/autoinsert-yas-expand]))
    #+END_SRC
 
 ** Auto Complete
@@ -1197,8 +1203,10 @@ rew install ag
        :init
        (add-hook 'after-init-hook 'global-company-mode)
        :config
-       (add-to-list 'company-backends 'company-math-symbols-unicode)
-       :diminish company-mode)
+       (progn
+          (global-set-key (kbd "TAB") #'company-indent-or-complete-common)
+          (add-to-list 'company-backends 'company-math-symbols-unicode))
+       :diminish (company-mode "cmp"))
    #+END_SRC
 
    Take advantage of idle time by displaying some documentation
@@ -1221,10 +1229,11 @@ rew install ag
    #+BEGIN_SRC elisp
      (use-package yasnippet
        :ensure t
+       :diminish  "γ"
        :init
        (yas-global-mode 1)
        :config
-       (add-to-list 'yas-snippet-dirs (ha/emacs-subdirectory "snippets")))
+       (add-to-list 'yas-snippet-dirs (gas/emacs-subdirectory "snippets")))
    #+END_SRC
 
    *Note:*: the =snippets= directory contains directories for each
@@ -1235,7 +1244,7 @@ rew install ag
    I like spell checking with [[http://www.emacswiki.org/emacs/FlySpell][FlySpell]], which uses the built-in
    spell-check settings of [[https://www.gnu.org/software/ispell/][ispell]].
 
-   The [[http://aspell.net][ASpell]] project is better supported than ISpell.
+   The [[http://aspell.net][aspell]] project is better supported than ISpell.
 
    #+BEGIN_SRC sh :tangle no
      brew install aspell
@@ -1325,7 +1334,7 @@ rew install ag
    same way each time.
 
    #+BEGIN_SRC elisp
-     (defun ha/ispell-word-then-abbrev (p)
+     (defun gas/ispell-word-then-abbrev (p)
        "Call `ispell-word'.  After create an abbrev for the correction made.
      With prefix P, create local abbrev.  Otherwise it will be
      global."
@@ -1348,7 +1357,7 @@ rew install ag
    #+BEGIN_SRC elisp
      (use-package abbrev
        :bind ("C-c T a" . abbrev-mode)
-             ("A-;" . ha/ispell-word-then-abbrev)
+             ("A-;" . gas/ispell-word-then-abbrev)
        :init (setq save-abbrevs t)
              (setq-default abbrev-mode t)
        :diminish abbrev-mode)
@@ -1417,7 +1426,7 @@ rew install ag
      (use-package bookmark
        :init (setq bookmark-save-flag 1)
        :config
-       (defun ha/add-bookmark (name)
+       (defun gas/add-bookmark (name)
          (interactive
           (list (let* ((filename  (file-name-base (buffer-file-name)))
                        (project   (projectile-project-name))
@@ -1425,8 +1434,8 @@ rew install ag
                        (initial   (format "%s::%s:%s " project filename func-name)))
                   (read-string "Bookmark: " initial))))
          (bookmark-set name))
-       :bind  (("C-c b m" . ha/add-bookmark)
-               ("C-x r m" . ha/add-bookmark)
+       :bind  (("C-c b m" . gas/add-bookmark)
+               ("C-x r m" . gas/add-bookmark)
                ("C-x r b" . helm-bookmarks)))
    #+END_SRC
 
@@ -1443,7 +1452,7 @@ rew install ag
               bm-cycle-all-buffers t)
         :config
         ;; Make a more bookmarky symbol for a 'mark':
-       ;; (define-fringe-bitmap 'bm-marker-left [254 254 254 254 254 238 198 130] 8 8 'center)
+        (define-fringe-bitmap 'bm-marker-left [254 254 254 254 254 238 198 130] 8 8 'center)
         (let ((fringe-backgd (face-background 'fringe)))
           (set-face-attribute 'bm-fringe-face nil
                               :foreground "green" :background fringe-backgd))
@@ -1752,17 +1761,17 @@ rew install ag
     mode, so wrappers are in order:
 
     #+BEGIN_SRC elisp
-      (defun ha/hs-show-all ()
+      (defun gas/hs-show-all ()
         (interactive)
         (hs-minor-mode 1)
         (hs-show-all))
 
-      (defun ha/hs-hide-all ()
+      (defun gas/hs-hide-all ()
         (interactive)
         (hs-minor-mode 1)
         (hs-hide-all))
 
-      (defun ha/hs-toggle-hiding ()
+      (defun gas/hs-toggle-hiding ()
         (interactive)
         (hs-minor-mode 1)
         (hs-toggle-hiding))
@@ -1775,9 +1784,9 @@ rew install ag
       (use-package hs-minor-mode
         :bind
         ("C-c T h" . hs-minor-mode)
-        ("C-c h a" . ha/hs-hide-all)
-        ("C-c h s" . ha/hs-show-all)
-        ("C-c h h" . ha/hs-toggle-hiding))
+        ("C-c h a" . gas/hs-hide-all)
+        ("C-c h s" . gas/hs-show-all)
+        ("C-c h h" . gas/hs-toggle-hiding))
     #+END_SRC
 
     See the [[http://www.emacswiki.org/emacs/HideShow][online resources]].
@@ -1813,7 +1822,7 @@ rew install ag
 
     #+BEGIN_SRC elisp
       (defun activate-aggressive-indent ()
-        "Locally add `ha/indent-defun' to `post-command-hook'."
+        "Locally add `gas/indent-defun' to `post-command-hook'."
         (add-hook 'post-command-hook
                   'indent-defun nil 'local))
     #+END_SRC
@@ -1841,7 +1850,7 @@ rew install ag
 ** Emacs Lisp
 
    Sure, everything here is in Emacs Lisp, but this section helps me
-   write more of that... like making snazzy symbols and colorising the
+   write more of that... like making snazzy symbols and colourising the
    variables.
 
    The [[https://github.com/ankurdave/color-identifiers-mode][color-identifiers]] project (unlike [[https://github.com/Fanael/rainbow-identifiers][others]]), downplay the
@@ -1890,7 +1899,7 @@ rew install ag
     #+BEGIN_SRC elisp
       (use-package paredit
         :ensure t
-        :diminish paredit-mode
+        :diminish (paredit-mode "{}")
         :init
           (add-hook 'emacs-lisp-mode-hook 'paredit-mode))
     #+END_SRC

@@ -1,7 +1,7 @@
 #+TITLE:  Emacs EShell Parameters
 #+AUTHOR: Howard Abrams
 #+EMAIL:  howard.abrams@gmail.com
-#+DATE:   [2014-02-27 Thu]
+#+DATE:   <2016-10-14 Fri>
 #+TAGS:   emacs
 
 My frustration with shells makes me enjoy Emacs Shell, but there are

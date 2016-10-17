@@ -90,6 +90,8 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
   #+BEGIN_SRC elisp
     (use-package clojure-mode
       :ensure t
+      :mode (("\\.edn$" . clojure-mode))
+      :diminish
       :init
       (defconst clojure--prettify-symbols-alist
         '(("fn"   . ?λ)
@@ -114,7 +116,7 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
       (add-hook 'clojure-mode-hook 'color-identifiers-mode))
   #+END_SRC
 
-* Compojure
+* Indenting
 
   According to the [[https://github.com/weavejester/compojure/wiki][Compojure Wiki]], the following code makes their
   macros look prettier:
@@ -122,15 +124,32 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
   #+BEGIN_SRC elisp
     (use-package clojure-mode
       :config
-      (define-clojure-indent
-        (defroutes 'defun)
-        (GET 2)
-        (POST 2)
-        (PUT 2)
-        (DELETE 2)
-        (HEAD 2)
-        (ANY 2)
-        (context 2)))
+      (progn
+        (define-clojure-indent
+          (defroutes 'defun)
+          (GET 2)
+          (POST 2)
+          (PUT 2)
+          (DELETE 2)
+          (HEAD 2)
+          (ANY 2)
+          (context 2)
+          (let-routes 1))
+
+        (define-clojure-indent
+          (select 1)
+          (insert 1)
+          (update 1)
+          (delete 1))
+
+        (define-clojure-indent
+          (go-loop 1))
+
+        (define-clojure-indent
+          (this-as 1)
+          (specify 1)
+          (specify! 1))
+      )
   #+END_SRC
 
 * Paredit
@@ -234,25 +253,26 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
             cider-repl-use-clojure-font-lock t
             cider-repl-wrap-history t
             cider-repl-history-size 1000
-            cider-show-error-buffer t
+            cider-show-error-buffer nil
             nrepl-hide-special-buffers t
             ;; Stop error buffer from popping up while working in buffers other than the REPL:
             nrepl-popup-stacktraces nil)
 
-      (add-hook 'cider-mode-hook 'cider-turn-on-eldoc-mode)
-      (add-hook 'cider-mode-hook 'company-mode)
+      (add-hook 'cider-mode-hook 'eldoc-mode)
+      (add-hook 'cider-mode-hook #'company-mode)
 
       (add-hook 'cider-repl-mode-hook 'paredit-mode)
       (add-hook 'cider-repl-mode-hook 'superword-mode)
-      (add-hook 'cider-repl-mode-hook 'company-mode)
-      (add-hook 'cider-test-report-mode 'jcf-soft-wrap)
+      (add-hook 'cider-repl-mode-hook #'company-mode)
+   ;;   (add-hook 'cider-test-report-mode 'jcf-soft-wrap)
 
       :bind (:map cider-mode-map
              ("C-c C-v C-c" . cider-send-and-evaluate-sexp)
              ("C-c C-p"     . cider-eval-print-last-sexp))
 
       :config
-      (use-package slamhound))
+      ;;(use-package slamhound)
+      )
   #+END_SRC
 
   What about doing the evaluation but re-inserting the results as a

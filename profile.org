@@ -33,7 +33,7 @@ similar settings applicable to all my shells.
   OLDPATH=$PATH
   PATH=$HOME/bin
 
-  for DIR in /opt/local/bin /opt/local/sbin /usr/local/bin /usr/local/sbin
+  for DIR in $HOME/repos/ansible/bin /opt/local/bin /opt/local/sbin /usr/local/bin /usr/local/sbin
   do
     if [ -d $DIR ]
     then
@@ -41,7 +41,16 @@ similar settings applicable to all my shells.
     fi
   done
 
+  for PYDIR in $HOME/repos/ansible/lib
+  do
+    if [ -d $PYDIR ]
+    then
+        PYTHONPATH=$PYDIR:$PYTHONPATH
+    fi
+  done
+
   PATH=$PATH:$OLDPATH
+  export PYTHONPATH
 #+END_SRC
 
 * Emacs

@@ -1,19 +1,21 @@
 #+TITLE:  Emacs Org-Mode Settings
 #+AUTHOR: Andrés Gasson
 #+EMAIL:  agasson@red-elvis.net
-#+DATE:   [2014-02-01 Sat]
+#+DATE:   [2016-10-13 Thu]
 #+TAGS:   emacs
 
-The [[http://orgmode.org][Org Mode]] feature was a big reason in my recent re-kindling of my
-Emacs love affair.
+The [[http://orgmode.org][Org Mode]] feature got me into GTD. Which is where I started playing
+with Emacs.
 
 * Initial Settings
 
-  Initialization of Org Mode by hooking it into YASnippets, and other settings.
+  Initialisation of Org Mode by hooking it into YASnippets, and other
+  settings. Completely stolen from Howard Abrahms.
 
   #+BEGIN_SRC elisp
     (use-package org
       :ensure t        ; But it comes with Emacs now!?
+      :diminish  ("Org" "ø")
       :init
       (setq org-use-speed-commands t
             org-hide-emphasis-markers t
@@ -137,7 +139,7 @@ Emacs love affair.
 * Journaling
 
   Didn't realise that [[http://www.emacswiki.org/emacs/OrgJournal][org-journal]] essentially does what I have been
-  doing by hand. With a little customization, I don't have to change
+  doing by hand. With a little customisation, I don't have to change
   anything else:
 
   #+BEGIN_SRC elisp
