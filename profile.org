@@ -59,13 +59,13 @@ similar settings applicable to all my shells.
   I built from Homebrew:
 
 #+BEGIN_SRC sh
-  if [ $ON_A_MAC -eq 1 ]
+  if [ -n "$ON_A_MAC" ]
    then
-    export ALTERNATE_EDITOR=/usr/local/bin/emacs
-    export EDITOR=/usr/local/bin/emacsclient
-   else
     export ALTERNATE_EDITOR=/usr/bin/emacs
     export EDITOR=/usr/bin/emacsclient
+   else
+    export ALTERNATE_EDITOR=/usr/local/bin/emacs
+    export EDITOR=/usr/local/bin/emacsclient
   fi
 #+END_SRC
 
