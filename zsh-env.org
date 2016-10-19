@@ -44,7 +44,7 @@ between my other scripts, but so far I haven't thought of anything.
 
 ** History
 
-   We will let the =HISTFILE= variable as it is.
+   We will leave the =HISTFILE= variable as it is.
 
 #+BEGIN_SRC sh
   SAVEHIST=1000
@@ -95,7 +95,6 @@ between my other scripts, but so far I haven't thought of anything.
   Machine specific information (like environment variable
   information) should be stored in the =~/.profile=. I thought that
   Zshell automatically sourced that, but it appears not.
-
 #+BEGIN_SRC sh
   if [[ -f $HOME/.profile ]]
   then

@@ -53,6 +53,37 @@ similar settings applicable to all my shells.
   export PYTHONPATH
 #+END_SRC
 
+* SSH
+  Need to setup my ssh-agent properly
+#+BEGIN_SRC sh
+  SSH_ENV="$HOME/.ssh/environment"
+
+  function start_agent {
+      echo "Initialising new SSH agent..."
+      /usr/bin/ssh-agent | sed 's/^echo/#echo/' > "${SSH_ENV}"
+      echo succeeded
+      chmod 600 "${SSH_ENV}"
+      . "${SSH_ENV}" > /dev/null
+      /usr/bin/ssh-add;
+  }
+
+  # Source SSH settings, if applicable
+
+  if [ -f "${SSH_ENV}" ]; then
+      . "${SSH_ENV}" > /dev/null
+
+      ps -ef | grep ${SSH_AGENT_PID} | grep ssh-agent$ > /dev/null || {
+          start_agent;
+      }
+  else
+      start_agent;
+  fi
+
+  # Add atearoot key to ssh-agent keys
+  if [ -f ~/.ssh/atearoot_rsa.pem ]; then
+      ssh-add ~/.ssh/atearoot_rsa.pem
+  fi
+#+END_SRC
 * Emacs
 
   Set =EDITOR= to start up an =emacsclient=, but do that from the one
