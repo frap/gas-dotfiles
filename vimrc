@@ -38,8 +38,6 @@ set laststatus=2
 "------------------------------------------------
 " Automatically detect file types
 " Enable filetype-specific indenting and plugins
-filetype on
-filetype plugin indent on
 " file format group
 "augroup myfiletypes
 "  " Clear old autocmds in group
@@ -50,6 +48,3 @@ filetype plugin indent on
 "  autocmd FileType js set ai sw=4 sts=4 et
 "  autocmd FileType javascript set tabstop=4 shiftwidth=4 expandtab
 "augroup END
-" syntax
-syntax enable
-syntax on
