@@ -256,7 +256,8 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
             cider-show-error-buffer nil
             nrepl-hide-special-buffers t
             ;; Stop error buffer from popping up while working in buffers other than the REPL:
-            nrepl-popup-stacktraces nil)
+            nrepl-popup-stacktraces nil
+            )
 
       (add-hook 'cider-mode-hook 'eldoc-mode)
       (add-hook 'cider-mode-hook #'company-mode)
@@ -271,7 +272,7 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
              ("C-c C-p"     . cider-eval-print-last-sexp))
 
       :config
-      ;;(use-package slamhound)
+      (use-package slamhound)
       )
   #+END_SRC
 
