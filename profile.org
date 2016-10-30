@@ -89,14 +89,15 @@ similar settings applicable to all my shells.
   Set =EDITOR= to start up an =emacsclient=, but do that from the one
   I built from Homebrew:
 
+  Note: test -n => string is NOT null
 #+BEGIN_SRC sh
   if [ -n "$ON_A_MAC" ]
    then
-    export ALTERNATE_EDITOR=/usr/bin/emacs
-    export EDITOR=/usr/bin/emacsclient
-   else
     export ALTERNATE_EDITOR=/usr/local/bin/emacs
     export EDITOR=/usr/local/bin/emacsclient
+   else
+    export ALTERNATE_EDITOR=/usr/bin/emacs
+    export EDITOR=/usr/bin/emacsclient
   fi
 #+END_SRC
 
