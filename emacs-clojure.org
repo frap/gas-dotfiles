@@ -95,7 +95,8 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
       :init
       (defconst clojure--prettify-symbols-alist
         '(("fn"   . ?λ)
-          ("__"   . ?⁈)))
+          ("__"   . ?⁈))
+      )
 
       :config
       (add-hook 'clojure-mode-hook 'global-prettify-symbols-mode)
@@ -103,13 +104,8 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
              ("C-c d g" . cider-grimoire)
              ("C-c d w" . cider-grimoire-web)
              ("C-c d c" . clojure-cheatsheet)
-             ("C-c d d" . dash-at-point)))
-  #+END_SRC
-
-  Need to figure out how to get the color identifiers mode to work
-  without an error:
-
-  #+BEGIN_SRC elisp
+             ("C-c d d" . dash-at-point))
+      )
     (use-package color-identifiers-mode
       :ensure t
       :init
@@ -134,22 +130,27 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
           (HEAD 2)
           (ANY 2)
           (context 2)
-          (let-routes 1))
+          (let-routes 1)
+        )
 
         (define-clojure-indent
           (select 1)
           (insert 1)
           (update 1)
-          (delete 1))
+          (delete 1)
+        )
 
         (define-clojure-indent
-          (go-loop 1))
+          (go-loop 1)
+        )
 
         (define-clojure-indent
           (this-as 1)
           (specify 1)
-          (specify! 1))
+          (specify! 1)
+        )
       )
+    )
   #+END_SRC
 
 * Paredit
