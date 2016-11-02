@@ -103,10 +103,20 @@ similar settings applicable to all my shells.
 
 * Global Aliases
 
-  I dislike =more=, especially since =less= is now really sweet.
+  Rsync I want to maintain attributes but follow links as well as show
+  progress and be restartable.
 
 #+BEGIN_SRC sh
   alias more=less
+  alias rsync="rsync -avpL --progress --append"
+#+END_SRC
+
+* Clojure
+
+  I use boot so want to speed it up in the JVM.
+
+#+BEGIN_SRC sh
+  export BOOT_JVM_OPTIONS="-client -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:none"
 #+END_SRC
 
 * Python
