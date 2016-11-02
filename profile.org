@@ -90,14 +90,22 @@ similar settings applicable to all my shells.
   I built from Homebrew:
 
   Note: test -n => string is NOT null
+        test -z => string is null, aka has zero length
+
 #+BEGIN_SRC sh
   if [ -n "$ON_A_MAC" ]
    then
     export ALTERNATE_EDITOR=/usr/local/bin/emacs
     export EDITOR=/usr/local/bin/emacsclient
    else
-    export ALTERNATE_EDITOR=/usr/bin/emacs
-    export EDITOR=/usr/bin/emacsclient
+    ED=$(which emacs | grep -v no)
+    if [ -z $ED ];     # No emacs on linux machine
+    then
+       export EDITOR=$(which vi)
+    else
+       export ALTERNATE_EDITOR=$ED
+       export EDITOR=$(which emacsclient)
+    fi
   fi
 #+END_SRC
 
