@@ -1,7 +1,7 @@
 #+TITLE:  Emacs Configuration File
 #+AUTHOR: Andrés Gasson straight copy from Howard Abrahms
 #+EMAIL:  agasson@red-elvis.net
-#+DATE:   [201]
+#+DATE:   [2016-11-01 Tue]
 * Introduction
 
   This is my =.emacs= file ... well, the top-level of it anyway.
