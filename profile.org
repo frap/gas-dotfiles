@@ -1,7 +1,7 @@
 #+TITLE:  Shell Dot Profile
 #+AUTHOR: Andrés Gasson
 #+EMAIL:  agasson@red-elvis.net
-#+DATE:   [2016-09-30 Fri]
+#+DATE:   [2016-11-03 Wed]
 #+TAGS:   zsh shell
 
 This generates my =.profile= that contains environment variables and
