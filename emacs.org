@@ -127,6 +127,23 @@
      (require 'init-support)
    #+END_SRC
 
+** Modernising Emacs
+
+   With a long history of working on small machines without gigabytes
+   of RAM, we might as well let Emacs be the beast it has always
+   dreamed.
+
+   First, let’s increase the cache before starting garbage collection:
+   #+BEGIN_SRC elisp
+     (setq gc-cons-threshold 50000000)
+   #+END_SRC
+
+   Found [[https://github.com/wasamasa/dotemacs/blob/master/init.org#init][here]] how to remove the warnings from the GnuTLS library when
+   using HTTPS... increase the minimum prime bits size:
+   #+BEGIN_SRC elisp
+     (setq gnutls-min-prime-bits 4096)
+   #+END_SRC
+
 * Package Initialisation
 ** Package Manager
 
@@ -140,7 +157,7 @@
 
      (setq package-archives '(("org"       . "http://orgmode.org/elpa/")
                               ("gnu"       . "http://elpa.gnu.org/packages/")
-                              ("melpa"     . "http://stable.melpa.org/packages/")
+                              ("melpa"     . "http://melpa.org/packages/")
                               ("marmalade" . "http://marmalade-repo.org/packages/")))
 
      (package-initialize)
@@ -173,7 +190,7 @@
 
      (use-package s
        :ensure t)
-   #+END_SRC
+    #+END_SRC
 
 * Variables
 
@@ -230,6 +247,25 @@
      (setq epa-file-cache-passphrase-for-symmetric-encryption t)
    #+END_SRC
 
+** Misc Variable Settings
+
+   Does anyone type =yes= anymore?
+   #+BEGIN_SRC elisp
+     (fset 'yes-or-no-p 'y-or-n-p)
+   #+END_SRC
+
+   Fix the scrolling to keep point in the center:
+   #+BEGIN_SRC elisp
+     (setq scroll-conservatively 10000
+           scroll-preserve-screen-position t)
+   #+END_SRC
+
+   I've been using Emacs for too long to need to re-enable each
+   feature bit-by-bit:
+   #+BEGIN_SRC elisp
+     (setq disabled-command-function nil)
+   #+END_SRC
+
 * Display Settings
 
   Remove surpfulous fluff from display.
@@ -245,14 +281,21 @@
       (scroll-bar-mode -1))            ;; Scrollbars are waste screen estate
   #+END_SRC
 
-*** Winner mode
-  Winner-mode lets you use =C-c <left>= and =C-c <right>= to switch
-  between windows configurations.
+  My mode line has become quite complicated, so I've pulled it out
+  into its own file:
 
   #+BEGIN_SRC elisp
-  (use-package winner
-     :defer t)
+    (require 'init-mode-line2)
   #+END_SRC
+
+  And the best colored highlighting of selected text needs to be both
+  bright, but not obscure the white text in the foreground (see
+  =list-colors-display=). Favorites so far are =purple4= and =DarkOrange3=:
+
+  #+BEGIN_SRC elisp
+    (set-face-background 'region "blue3")
+  #+END_SRC
+
   Most of the display settings actually come from the [[file:emacs-mac.org][Mac initialization file]].
 
 ** Whitespace Mode
@@ -386,6 +429,23 @@
     #+BEGIN_SRC elisp
       (require 'init-f2)
     #+END_SRC
+
+** Undo and Redo
+
+   According to [[http://ergoemacs.org/emacs/emacs_best_redo_mode.html][this article]], I get better functionality than
+   the =redo+= plugin (which I can't seem to get working well).
+
+   #+BEGIN_SRC elisp
+     (use-package undo-tree
+       :ensure t
+       :diminish undo-tree-mode
+       :init
+       (global-undo-tree-mode 1)
+       :config
+       (defalias 'redo 'undo-tree-redo)
+       :bind (("C-z" . undo)     ; Zap to character isn't helpful
+              ("C-S-z" . redo)))
+   #+END_SRC
 
 ** Highlighting and Narrowing
 
@@ -530,71 +590,6 @@
             ("C-x C-b" . kpm-list))
    #+END_SRC
 
-** Controlling Window Size
-
-   Often, while on my laptop, I want the current window to be ‘large
-   enough for work’, and this is bound to =<f9> .= (period).
-
-   #+BEGIN_SRC elisp
-     (global-unset-key (kbd "C-c w"))
-     (global-set-key (kbd "C-c w r") 'gas/window-standard-size)
-   #+END_SRC
-
-   If I've enlarged the window, I can restore that window to its
-   original size, so this requires a /buffer local variable/:
-
-   #+BEGIN_SRC elisp
-     (make-variable-buffer-local 'window-width-original)
-   #+END_SRC
-
-   Now a function that either changes the width to 80, or back to the
-   original size if already at 80.
-
-   #+BEGIN_SRC elisp
-     (defun gas/window-standard-size (arg)
-       "Set size of the current window to 80 characters.
-     If already is 80 characters, reset to its previous size.  A
-     prefix ARG can be given to set the window to a particular width."
-       (interactive "p")
-
-       ;; If not already set, let's store the current window width in our
-       ;; buffer-local variable.
-       (if (not (local-variable-p 'window-width-original))
-           (setq window-width-original (window-width)))
-
-       ;; The 'goal' is 80 unless we get a better argument, C-u 60 ...
-       (let* ((goal-width (if (> arg 8) arg 80))
-              (new-width (- goal-width (window-width))))
-
-         (if (= new-width 0)    ; Already enlarged? Restore:
-             (enlarge-window-horizontally (- window-width-original goal-width))
-           (enlarge-window-horizontally new-width))))
-   #+END_SRC
-
-** Controlling Window Placement
-
-   Change window configuration and then return to the old
-   configuration with [[http://www.emacswiki.org/emacs/WinnerMode][winner-mode]].  Use =Control-C Arrow= keys to
-   cycle through window/frame configurations.
-
-   #+BEGIN_SRC elisp
-     (use-package winner
-       :ensure t
-       :init (winner-mode 1))
-   #+END_SRC
-
-   While [[http://www.emacswiki.org/emacs/WinnerMode][winner-mode]] is easy to keep the current window configuration
-   /clean/, the [[https://github.com/tlh/workgroups.el][workgroups]] project has more features. However, due to
-   existing bugs in that project, I've switched to [[https://github.com/pashinin/workgroups2][workgroups2]]:
-
-   Short answer for using it:
-
-   - ~C-c a c~ to create and name a new /view/
-   - Configure the screen as you like it
-   - ~C-c a u~ to have that view as the base for that name
-   - ~C-c a v~ to switch to a particular workgroup view.
-   - ~C-c a C-s~ to save all workgroup views to the file.
-
 ** Better Jumping
 
    Mostly using the [[https://github.com/abo-abo/avy][avy]] project's [[help:avy-goto-word-1][avy-goto-word-1]] function, so I bind
@@ -640,16 +635,57 @@
      (define-key global-map "\M-Q" 'unfill-paragraph)
    #+END_SRC
 
-** General Behaviour Fixes
+** General Behavior Fixes
 
-   The subtle changes I've been making to Emacs behaviour has grown
-   until I felt I should move it into [[file:emacs-fixes.org][its own source file]].
+   Howards subtle changes he has made to Emacs behaviour has grown
+   so he moved it into [[file:emacs-fixes.org][its own source file]].
 
    #+BEGIN_SRC elisp
      (require 'init-fixes)
+   #+EN
+** Multiple Cursors
+
+   I like Magmar's [[https://github.com/emacsmirror/multiple-cursors][multiple-cursors]] project.  It doesn't have any
+    default keybindings, so I set up these:
+
+   #+BEGIN_SRC elisp
+     (use-package multiple-cursors
+       :ensure t
+       :bind (("C-c C-. ."   . mc/mark-all-dwim)
+              ("C-c C-. C-." . mc/mark-all-like-this-dwim)
+              ("C-c C-. n"   . mc/mark-next-like-this)
+              ("C-c C-. p"   . mc/mark-previous-like-this)
+              ("C-c C-. a"   . mc/mark-all-like-this)
+              ("C-c C-. N"   . mc/mark-next-symbol-like-this)
+              ("C-c C-. P"   . mc/mark-previous-symbol-like-this)
+              ("C-c C-. A"   . mc/mark-all-symbols-like-this)
+              ("C-c C-. f"   . mc/mark-all-like-this-in-defun)
+              ("C-c C-. l"   . mc/edit-lines)
+              ("C-c C-. e"   . mc/edit-ends-of-lines)))
    #+END_SRC
 
-** Expand Region
+   #+BEGIN_SRC elisp :tangle no
+     (use-package multiple-cursors
+       :ensure t
+       :config
+       (global-set-key
+        (kbd "C-c C-.")
+        (defhydra hydra-multiple-cursors ()
+          "multiple-cursors"
+          ("." mc/mark-all-dwim                   "all-dwim")
+          ("C-." mc/mark-all-like-this-dwim       "all-like-dwim")
+          ("n" mc/mark-next-like-this             "next")
+          ("p" mc/mark-previous-like-this         "previous")
+          ("a" mc/mark-all-like-this              "mark-all")
+          ("N" mc/mark-next-symbol-like-this      "next-symbol")
+          ("P" mc/mark-previous-symbol-like-this  "previous-symbol")
+          ("A" mc/mark-all-symbols-like-this      "all-symbols")
+          ("f" mc/mark-all-like-this-in-defun     "in-func")
+          ("l" mc/edit-lines                      "all-lines")
+          ("e" mc/edit-ends-of-lines              "end-lines"))))
+   #+END_SRC
+
+* Expand Region
 
    Wherever you are in a file, and whatever the type of file, you can
    slowly increase a region selection by logical segments by using
@@ -971,8 +1007,7 @@
      (use-package helm
        :ensure t
        :init
-       (use-package helm-config)
-       )   ;; Binds C-x c to the helm bidness.
+       (use-package helm-config))   ;; Binds C-x c to the helm bidness.
    #+END_SRC
 
    Re-read [[http://tuhdo.github.io/helm-intro.html][this essay on Helm]].
@@ -1129,8 +1164,12 @@
                       (gas/emacs-subdirectory "backups")))))
    #+END_SRC
 
-   Make backups of files, even when they're in version control
+   Tramp should do the same:
+   #+BEGIN_SRC elisp
+     (setq tramp-backup-directory-alist backup-directory-alist)
+   #+END_SRC
 
+   Make backups of files, even when they're in version control:
    #+BEGIN_SRC elisp
      (setq vc-make-backup-files t)
    #+END_SRC
@@ -1201,12 +1240,13 @@
      (use-package company
        :ensure t
        :init
+       (setq company-dabbrev-ignore-case t
+             company-show-numbers t)
        (add-hook 'after-init-hook 'global-company-mode)
        :config
-       (progn
-          (global-set-key (kbd "TAB") #'company-indent-or-complete-common)
-          (add-to-list 'company-backends 'company-math-symbols-unicode))
-       :diminish (company-mode "cmp"))
+       (add-to-list 'company-backends 'company-math-symbols-unicode)
+       :bind ("C-:" . company-complete)  ; In case I don't want to wait
+       :diminish company-mode)
    #+END_SRC
 
    Take advantage of idle time by displaying some documentation
@@ -1633,7 +1673,8 @@
 
     #+BEGIN_SRC elisp
       (use-package eldoc
-        :diminish eldoc-mode)
+        :diminish eldoc-mode
+        :init  (setq eldoc-idle-delay 0.1))
     #+END_SRC
 
 *** Tag Support
@@ -1838,6 +1879,21 @@
                                           '(("\\<\\(FIX\\|FIXME\\|TODO\\|BUG\\|HACK\\):" 1 font-lock-warning-face t)))))
     #+END_SRC
 
+*** XML
+
+    Can't believe we are still dealing with this awful data format.
+
+    #+BEGIN_SRC elisp
+      (setq nxml-slash-auto-complete-flag t)
+    #+END_SRC
+
+    Remember a couple of bindings:
+
+    - ~C-c C-i~ :: Type =<p= and then this, to have the other tag inserted
+         and the cursor in the middle.
+    - ~C-c C-f~ :: Finish any opened tag that needs to be completed.
+    - ~C-c C-s C-a~ :: After putting in the schema, use this to refresh it
+
 ** Shell Scripts
 
    Files in my =bin= directory (but /only/ if it doesn't have any
@@ -1869,26 +1925,16 @@
 
    #+BEGIN_SRC elisp
      (use-package lisp-mode
+       :bind (:map emacs-lisp-mode-map ("C-c C-z" . ielm))
        :init
        (defconst lisp--prettify-symbols-alist
-         '(("lambda"  . ?λ)
-           ("."       . ?•)))
+         '(("lambda"  . ?λ)      ; Shrink this
+           ("."       . ?•)))    ; Enlarge this
        :config
        (add-hook 'emacs-lisp-mode-hook 'global-prettify-symbols-mode)
+       (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
        (add-hook 'emacs-lisp-mode-hook 'activate-aggressive-indent))
    #+END_SRC
-
-*** Dash List Library
-
-    [[https://github.com/magnars/dash.el][Dash]] is cool and useful for dealing with collections in a standard
-    functional way.
-
-    #+BEGIN_SRC elisp
-      (use-package dash
-        :ensure t
-        :defer 60
-        :config (eval-after-load "dash" '(dash-enable-font-lock)))
-    #+END_SRC
 
 *** Paredit
 
@@ -1902,17 +1948,6 @@
         :diminish (paredit-mode "{}")
         :init
           (add-hook 'emacs-lisp-mode-hook 'paredit-mode))
-    #+END_SRC
-
-*** Coloured Variables
-
-    Colour each variable, and downplay standard key words:
-
-    #+BEGIN_SRC elisp
-      (use-package color-identifiers-mode
-        :ensure t
-        :init
-        (add-hook 'emacs-lisp-mode-hook 'color-identifiers-mode))
     #+END_SRC
 
 *** Nicer Paren Matching
@@ -2008,7 +2043,7 @@
 
    See [[file:emacs-javascript.org][emacs-javascript.el]] for details on working with JavaScript.
 
-   #+BEGIN_SRC elisp
+   #+BEGIN_SRC elisp :tangle no
      (require 'init-javascript)
    #+END_SRC
 
@@ -2100,9 +2135,7 @@
    #+BEGIN_SRC elisp
      (use-package markdown-mode
        :ensure t
-       :mode (("\\.\\(m\\(ark\\)?down\\|md\\)$" . markdown-mode)
-              ("README\\.md\\'" . gfm-mode))
-       :init (setq markdown-command "multimarkdown")
+       :mode ("\\.\\(m\\(ark\\)?down\\|md\\)$" . markdown-mode)
        :config
        (bind-key "A-b" (surround-text-with "+*") markdown-mode-map)
        (bind-key "s-b" (surround-text-with "**") markdown-mode-map)
@@ -2126,13 +2159,12 @@
 
    #+BEGIN_SRC elisp
      (let ((plantuml-jar (car (file-expand-wildcards "/usr/local/Cellar/plantuml/*/plantuml*.jar"))))
-       (if plantuml-jar
-           (use-package puml-mode
-             :ensure t
-             :commands (puml-mode)
-             :init (progn
-             (setq puml-plantuml-jar-path plantuml-jar
-                   org-plantuml-jar-path plantuml-jar)))))
+       (ignore-errors
+         (use-package plantuml-mode
+           :if plantuml-jar
+           :init
+           (setq plantuml-jar-path plantuml-jar
+                 org-plantuml-jar-path plantuml-jar))))
    #+END_SRC
 
    And the [[http://ppareit.github.com/graphviz-dot-mode/][mode for Graphviz]]:
@@ -2231,6 +2263,13 @@
 
    #+BEGIN_SRC elisp
      (require 'init-local nil t)
+   #+END_SRC
+
+   Let's get happy:
+
+   #+BEGIN_SRC elisp
+     (defun display-startup-echo-area-message ()
+       (message "Happy hacking!"))
    #+END_SRC
 
    After the first load, we can reload this with a require:
