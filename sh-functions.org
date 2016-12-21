@@ -20,16 +20,6 @@ According to [[http://shreevatsa.wordpress.com/2008/03/30/zshbash-startup-files-
 Machine-specific gunk goes in the standard =.bashrc= and =~/.zshrc= files,
 and global variables are stored in =.profile= and =.zsh_profile=.
 
-* Technical Gunk
-
-  The following are the tangled settings. Type: =C-c C-v t=
-  to create the script file.
-
-#+PROPERTY: tangle ~/.sh-funcs.sh
-#+PROPERTY: comments org
-#+PROPERTY: shebang #!/bin/sh
-#+DESCRIPTION: Aliases and functions shareable between Bash and Zsh
-
 * Editor
 
   Another wrapper around =emacsclient= but this is a blocking
@@ -181,6 +171,10 @@ and global variables are stored in =.profile= and =.zsh_profile=.
     DIR=$1
     shift
     tar -cjf - --exclude .git $DIR | ssh $* 'tar -xjvf -'
+  }
+
+  function cp-git {
+   rsync -av --exclude .git $1 $2
   }
 #+END_SRC
 
@@ -403,10 +397,13 @@ function ngrep {
   highlighted in pretty colors.
 
 #+BEGIN_SRC sh
-LESSPIPE=`which src-hilite-lesspipe.sh`
+LESSPIPE=$(which src-hilite-lesspipe.sh | grep -v no)
+if [ -z $LESSPIPE ]
+then
 export LESSOPEN="| ${LESSPIPE} %s"
 export LESS='-R'
 alias less='less -m -N -g -i -J --underline-special --SILENT'
+fi
 #+END_SRC
 
 * Git Helpers
@@ -495,3 +492,12 @@ alias gf-changed='git status --porcelain | grep "^ M" | cut -c4-'
       source ~/bin/bashmarks.sh
   fi
 #+END_SRC
+* Technical Gunk
+
+  The following are the tangled settings. Type: =C-c C-v t=
+  to create the script file.
+
+#+PROPERTY: tangle ~/.sh-funcs.sh
+#+PROPERTY: comments org
+#+PROPERTY: shebang #!/bin/sh
+#+DESCRIPTION: Aliases and functions shareable between Bash and Zsh

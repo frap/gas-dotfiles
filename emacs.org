@@ -119,14 +119,6 @@
      (add-to-list 'load-path (gas/emacs-subdirectory "elisp"))
    #+END_SRC
 
-   Load up my special collection of enhancements to Emacs Lisp -
-   common-lisp and init-support:
-
-   #+BEGIN_SRC elisp
-     (require 'cl-lib)
-     (require 'init-support)
-   #+END_SRC
-
 ** Modernising Emacs
 
    With a long history of working on small machines without gigabytes
@@ -179,7 +171,9 @@
 
 ** Init File Support
 
-  Load up my collection of enhancements to Emacs Lisp, including dash and s for string manipulation, as much of my initialization code depends on it.
+   Load up my collection of enhancements to Emacs Lisp, including [[https://github.com/magnars/dash.el][dash]]
+   and [[https://github.com/magnars/s.el][s]] for string manipulation, as much of my initialisation code
+   depends on it.
 
    #+BEGIN_SRC elisp
      (require 'cl)
@@ -637,12 +631,13 @@
 
 ** General Behavior Fixes
 
-   Howards subtle changes he has made to Emacs behaviour has grown
-   so he moved it into [[file:emacs-fixes.org][its own source file]].
+   The subtle changes I've been making to Emacs behaviour has grown
+   until I felt I should move it into [[file:emacs-fixes.org][its own source file]].
 
    #+BEGIN_SRC elisp
-     (require 'init-fixes)
-   #+EN
+   (require 'init-fixes)
+   #+END_SRC
+
 ** Multiple Cursors
 
    I like Magmar's [[https://github.com/emacsmirror/multiple-cursors][multiple-cursors]] project.  It doesn't have any
@@ -685,7 +680,7 @@
           ("e" mc/edit-ends-of-lines              "end-lines"))))
    #+END_SRC
 
-* Expand Region
+** Expand Region
 
    Wherever you are in a file, and whatever the type of file, you can
    slowly increase a region selection by logical segments by using
@@ -948,9 +943,10 @@
         (setq ido-temp-list
               (sort ido-temp-list
                     (lambda (a b)
-                      (time-less-p
-                       (sixth (file-attributes (concat ido-current-directory b)))
-                       (sixth (file-attributes (concat ido-current-directory a)))))))
+                      (ignore-errors
+                        (time-less-p
+                         (sixth (file-attributes (concat ido-current-directory b)))
+                         (sixth (file-attributes (concat ido-current-directory a))))))))
         (ido-to-end  ;; move . files to end (again)
          (delq nil (mapcar
                     (lambda (x) (and (char-equal (string-to-char x) ?.) x))
@@ -1284,7 +1280,7 @@
    I like spell checking with [[http://www.emacswiki.org/emacs/FlySpell][FlySpell]], which uses the built-in
    spell-check settings of [[https://www.gnu.org/software/ispell/][ispell]].
 
-   The [[http://aspell.net][aspell]] project is better supported than ISpell.
+   The [[http://aspell.net][ASpell]] project is better supported than ISpell.
 
    #+BEGIN_SRC sh :tangle no
      brew install aspell
@@ -2171,7 +2167,10 @@
 
    #+BEGIN_SRC elisp
      (use-package graphviz-dot-mode
-        :ensure t)
+                  :ensure t
+                  :init
+                  (setq default-tab-width 2)
+     )
    #+END_SRC
 
 * Applications

@@ -33,7 +33,7 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
                     [lein-cljfmt "0.5.5"]]
           :dependencies [[org.clojure/clojure "1.7.0"]
                          [acyclic/squiggly-clojure "0.1.6"]
-                         [org.clojure/tools.nrepl "0.2.11"]]}}
+                         [org.clojure/tools.nrepl "0.2.12"]]}}
   #+END_SRC
 
   *Note:* the latest version of cider removes the need is you use
@@ -95,8 +95,7 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
       :init
       (defconst clojure--prettify-symbols-alist
         '(("fn"   . ?λ)
-          ("__"   . ?⁈))
-      )
+          ("__"   . ?⁈)))
 
       :config
       (add-hook 'clojure-mode-hook 'global-prettify-symbols-mode)
@@ -104,8 +103,13 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
              ("C-c d g" . cider-grimoire)
              ("C-c d w" . cider-grimoire-web)
              ("C-c d c" . clojure-cheatsheet)
-             ("C-c d d" . dash-at-point))
-      )
+             ("C-c d d" . dash-at-point)))
+  #+END_SRC
+
+  Need to figure out how to get the color identifiers mode to work
+  without an error:
+
+  #+BEGIN_SRC elisp
     (use-package color-identifiers-mode
       :ensure t
       :init
@@ -254,14 +258,14 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
             cider-repl-use-clojure-font-lock t
             cider-repl-wrap-history t
             cider-repl-history-size 1000
-            cider-show-error-buffer nil
+            cider-show-error-buffer t
             nrepl-hide-special-buffers t
             ;; Stop error buffer from popping up while working in buffers other than the REPL:
             nrepl-popup-stacktraces nil
             )
 
-      (add-hook 'cider-mode-hook 'eldoc-mode)
-      (add-hook 'cider-mode-hook #'company-mode)
+      (add-hook 'cider-mode-hook 'cider-turn-on-eldoc-mode)
+      (add-hook 'cider-mode-hook 'company-mode)
 
       (add-hook 'cider-repl-mode-hook 'paredit-mode)
       (add-hook 'cider-repl-mode-hook 'superword-mode)
@@ -518,4 +522,4 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
 #+PROPERTY:    comments no
 #+OPTIONS:     num:nil toc:nil todo:nil tasks:nil tags:nil
 #+OPTIONS:     skip:nil author:nil email:nil creator:nil timestamp:nil
-#+INFOJS_OPT:  view:nil toc:nil ltoc:t mouse:underline buttons:0 path:http://orgmode.org/org-info.js
+#+INFOJS_OPT:  view:nil toc:nil ltoc:t mouse:underline buttons:0 path:http://orgmode.org/org-info.
