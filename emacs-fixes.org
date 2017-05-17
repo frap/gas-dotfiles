@@ -126,6 +126,7 @@ ever do that?
 
   #+BEGIN_SRC elisp
     (global-set-key [remap paredit-kill] (bol-with-prefix paredit-kill))
+    (global-set-key [remap sp-kill-hybrid-sexp] (bol-with-prefix sp-kill-hybrid-sexp))
     (global-set-key [remap org-kill-line] (bol-with-prefix org-kill-line))
     (global-set-key [remap kill-line] (bol-with-prefix kill-line))
 
@@ -360,6 +361,15 @@ ever do that?
   (global-set-key (kbd "C-c f -") 'find-file-decrement)
   (global-set-key (kbd "C-c f p") 'find-file-decrement)
 #+END_SRC
+
+* Kill This Buffer
+
+  I rarely want to kill any buffer but the one I'm looking at.
+
+  #+BEGIN_SRC elisp
+    (global-set-key (kbd "C-x k") 'kill-this-buffer)
+    (global-set-key (kbd "C-x K") 'kill-buffer)
+  #+END_SRC
 
 * Technical Artifacts
 

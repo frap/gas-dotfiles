@@ -1,11 +1,7 @@
-#+TITLE:  Emacs Org-Mode Settings
+#+TITLE:  Emacs Org-Mode Fu
 #+AUTHOR: Andrés Gasson
 #+EMAIL:  agasson@red-elvis.net
-#+DATE:   [2016-10-13 Thu]
-#+TAGS:   emacs
-
-The [[http://orgmode.org][Org Mode]] feature got me into GTD. Which is where I started playing
-with Emacs.
+#+DATE:   [2017-05-16 Tue]
 
 * Initial Settings
 
@@ -13,50 +9,164 @@ with Emacs.
   settings. Completely stolen from Howard Abrahms.
 
   #+BEGIN_SRC elisp
-    (use-package org
-      :ensure t        ; But it comes with Emacs now!?
-      :init
-      (setq org-use-speed-commands t
-            org-return-follows-link t
-            org-hide-emphasis-markers t
-            org-completion-use-ido t
-            org-outline-path-complete-in-steps nil
-            org-src-fontify-natively t   ;; Pretty code blocks
-            org-src-tab-acts-natively t
-            org-confirm-babel-evaluate nil
-            org-todo-keywords '((sequence "TODO(t)" "PROCHAIN(n)" "|" "FINI(d)")
-                                (sequence "|" "ANNULÉ(c)")))
-      (add-to-list 'auto-mode-alist '("\\.txt\\'" . org-mode))
-      (add-to-list 'auto-mode-alist '(".*/[0-9]*$" . org-mode))   ;; Journal entries
-      (add-hook 'org-mode-hook 'yas-minor-mode-on)
-      :bind (("C-c l" . org-store-link)
-             ("C-c c" . org-capture)
-             ("C-M-|" . indent-rigidly))
-      :config
-      (font-lock-add-keywords            ; A bit silly but my headers are now
-       'org-mode `(("^\\*+ \\(TODO\\) "  ; shorter, and that is nice canceled
-                    (1 (progn (compose-region (match-beginning 1) (match-end 1) "⚑")
-                              nil)))
-                   ("^\\*+ \\(PROCHAIN\\) "
-                    (1 (progn (compose-region (match-beginning 1) (match-end 1) "⚐")
-                              nil)))
-                   ("^\\*+ \\(ANNULÉ\\) "
-                    (1 (progn (compose-region (match-beginning 1) (match-end 1) "✘")
-                              nil)))
-                   ("^\\*+ \\(FINI\\) "
-                    (1 (progn (compose-region (match-beginning 1) (match-end 1) "✔")
-                              nil)))))
+     (use-package org-plus-contrib :ensure t :defer t)
+      (setq  gas/keep-clock-running nil)
 
-      (define-key org-mode-map (kbd "M-C-n") 'org-end-of-item-list)
-      (define-key org-mode-map (kbd "M-C-p") 'org-beginning-of-item-list)
-      (define-key org-mode-map (kbd "M-C-u") 'outline-up-heading)
-      (define-key org-mode-map (kbd "M-C-w") 'org-table-copy-region)
-      (define-key org-mode-map (kbd "M-C-y") 'org-table-paste-rectangle)
+      (defun gas/punch-in (arg)
+       "Start continuous clocking and set the default task to the
+         selected task.  If no task is selected set the Organization task
+         as the default task."
+       (interactive "p")
+       (setq gas/keep-clock-running t)
+       (if (equal major-mode 'org-agenda-mode)
+       ;;
+       ;; We're in the agenda
+       ;;
+       (let* ((marker (org-get-at-bol 'org-hd-marker))
+              (tags (org-with-point-at marker (org-get-tags-at))))
+         (if (and (eq arg 4) tags)
+             (org-agenda-clock-in '(16))
+           (gas/clock-in-organisation-task-as-default)))
+     ;;
+     ;; We are not in the agenda
+     ;;
+     (save-restriction
+       (widen)
+       ; Find the tags on the current task
+       (if (and (equal major-mode 'org-mode) (not (org-before-first-heading-p)) (eq arg 4))
+           (org-clock-in '(16))
+         (gas/clock-in-organisation-task-as-default)))))
 
-      (define-key org-mode-map [remap org-return] (lambda () (interactive)
-                                                    (if (org-in-src-block-p)
-                                                        (org-return)
-                                                      (org-return-indent)))))
+    (defun gas/punch-out ()
+      (interactive)
+      (setq gas/keep-clock-running nil)
+      (when (org-clock-is-active)
+       (org-clock-out))
+      (org-agenda-remove-restriction-lock))
+
+     (defun gas/clock-in-default-task ()
+      (save-excursion
+       (org-with-point-at org-clock-default-task
+       (org-clock-in))))
+
+     (defvar gas/organisation-task-id "eb155a82-92b2-4f25-a3c6-0304591af2f9")
+
+     (defun gas/clock-in-organiszation-task-as-default ()
+      (interactive)
+      (org-with-point-at (org-id-find gas/organiszation-task-id 'marker)
+      (org-clock-in '(16))))
+
+
+     (use-package org
+       :ensure org-plus-contrib        ; But it comes with Emacs now!?
+       :mode (("\\.org$" . org-mode))
+       :init
+       (setq org-directory "~/Dropbox/GTD"
+             org-agenda-files     (quote ("~/Dropbox/GTD/inbox.org"
+                                          "~/Dropbox/GTD/atea.org"
+                                          "~/Dropbox/GTD/refile.org"))
+             org-default-notes-file "~/Dropbox/GTD/refile.org"
+             org-use-speed-commands t
+             org-use-fast-todo-selection t
+             org-treat-S-cursor-todo-selection-as-state-change nil
+             org-return-follows-link t
+             org-hide-emphasis-markers t
+             org-completion-use-ido t
+             org-outline-path-complete-in-steps nil
+             org-src-fontify-natively t   ;; Pretty code blocks
+             org-src-tab-acts-natively t
+             org-confirm-babel-evaluate nil
+             org-todo-keywords '((sequence "TODO(t)" "PROCHAIN(n)" "|" "FINI(d)")
+                                 (sequence "|" "ANNULÉ(c@/!)" "PHONE" "MEETING" ))
+             org-capture-templates
+                (quote (("t" "todo" entry (file "~/Dropbox/GTD/refile.org")
+                         "* TODO %?\n%U\n%a\n" :clock-in t :clock-resume t)
+                        ("r" "respond" entry (file "~/git/org/refile.org")
+                         "* PROCHAIN Respond to %:from on %:subject\nSCHEDULED: %t\n%U\n%a\n" :clock-in t :clock-resume t :immediate-finish t)
+                        ("n" "note" entry (file "~/Dropbox/GTD/refile.org")
+                          "* %? :NOTE:\n%U\n%a\n" :clock-in t :clock-resume t)
+                        ("j" "Journal" entry (file+datetree "~/Dropbox/GTD/diary.org")
+                          "* %?\n%U\n" :clock-in t :clock-resume t)
+                        ("m" "Meeting" entry (file "~/Dropbox/GTD/refile.org")
+                          "* MEETING with %? :MEETING:\n%U" :clock-in t :clock-resume t)
+                        ("p" "Phone call" entry (file "~/Dropbox/GTD/refile.org")
+                         "* PHONE %? :PHONE:\n%U" :clock-in t :clock-resume t)
+                        ("h" "Habit" entry (file "~/Dropbox/GTD/refile.org")
+                         "* NEXT %?\n%U\n%a\nSCHEDULED: %(format-time-string \"%<<%Y-%m-%d %a .+1d/3d>>\")\n:PROPERTIES:\n:STYLE: habit\n:REPEAT_TO_STATE: NEXT\n:END:\n")
+                      ))
+             org-agenda-custom-commands (quote (
+                                                ("N" "Notes" tags "NOTE"
+                                                 ((org-agenda-overriding-header "Notes")
+                                                  (org-tags-match-list-sublevels t)))
+                                                ("h" "Habits" tags-todo "STYLE=\"habit\""
+                                                 ((org-agenda-overriding-header "Habits")
+                                                  (org-agenda-sorting-strategy
+                                                   '(todo-state-down priority-down category-keep))))
+                                                (" " "Agenda"
+                                                 ((agenda "" nil)
+                                                  (tags "REFILE"
+                                                    ((org-agenda-overriding-header "Tasks to Refile")
+                                                     (org-tags-match-list-sublevels nil)))
+                                                   (tags-todo "-REFILE-ANNULÉ/!"
+                                                     ((org-agenda-overriding-header "Work Smurk")
+                                                      (org-agenda-sorting-strategy
+                                                       '(todo-state-down priority-down))))
+                                                   ))))
+             org-clock-out-remove-zero-time-clocks t
+             org-time-stamp-rounding-minutes (quote (1 1))
+             org-agenda-time-grid (quote ((daily today remove-match)
+                                #("----------------" 0 16 (org-heading t))
+                                (0830 1030 1230 1500 1700)))
+             org-agenda-sorting-strategy
+                (quote ((agenda habit-down time-up user-defined-up effort-up category-keep)
+                  (todo category-up effort-up)
+                  (tags category-up effort-up)
+                  (search category-up)))
+             org-agenda-tags-column -102
+             org-refile-targets (quote ((nil :maxlevel . 9)
+                                 (org-agenda-files :maxlevel . 9)))
+             org-refile-use-outline-path t
+             org-outline-path-complete-in-steps nil
+             org-refile-allow-creating-parent-nodes (quote confirm)
+             org-completion-use-ido t
+             ido-everywhere t
+             ido-mode (quote both)
+             ido-default-file-method 'selected-window
+             ido-default-buffer-method 'selected-window
+             org-indirect-buffer-display 'current-window
+         )
+       (add-to-list 'auto-mode-alist '("\\.txt\\'" . org-mode))
+       (add-to-list 'auto-mode-alist '(".*/[0-9]*$" . org-mode))   ;; Journal entries
+       (add-hook 'org-mode-hook 'yas-minor-mode-on)
+       :bind (("C-c l" . org-store-link)
+              ("C-c c" . org-capture)
+              ("C-M-|" . indent-rigidly)
+              ("C-c a" . org-agenda))
+       :config
+       (font-lock-add-keywords            ; A bit silly but my headers are now
+        'org-mode `(("^\\*+ \\(TODO\\) "  ; shorter, and that is nice canceled
+                     (1 (progn (compose-region (match-beginning 1) (match-end 1) "⚑")
+                               nil)))
+                    ("^\\*+ \\(PROCHAIN\\) "
+                     (1 (progn (compose-region (match-beginning 1) (match-end 1) "⚐")
+                               nil)))
+                    ("^\\*+ \\(ANNULÉ\\) "
+                     (1 (progn (compose-region (match-beginning 1) (match-end 1) "✘")
+                               nil)))
+                    ("^\\*+ \\(FINI\\) "
+                     (1 (progn (compose-region (match-beginning 1) (match-end 1) "✔")
+                               nil)))))
+
+       (define-key org-mode-map (kbd "M-C-n") 'org-end-of-item-list)
+       (define-key org-mode-map (kbd "M-C-p") 'org-beginning-of-item-list)
+       (define-key org-mode-map (kbd "M-C-u") 'outline-up-heading)
+       (define-key org-mode-map (kbd "M-C-w") 'org-table-copy-region)
+       (define-key org-mode-map (kbd "M-C-y") 'org-table-paste-rectangle)
+
+       (define-key org-mode-map [remap org-return] (lambda () (interactive)
+                                                     (if (org-in-src-block-p)
+                                                         (org-return)
+                                                       (org-return-indent)))))
   #+END_SRC
 
   *Speed Commands:* If point is at the beginning of a headline or
@@ -77,6 +187,18 @@ with Emacs.
   #+BEGIN_SRC elisp
     (use-package org-drill
       :ensure org-plus-contrib)
+  #+END_SRC
+
+* Pomodoro
+  I use pomodoro so like to have that enabled and connected to
+  clocking
+
+  #+BEGIN_SRC elisp
+  (use-package org-pomodoro
+  :ensure t
+  :commands (org-pomodoro)
+  :config
+  )
   #+END_SRC
 
 * Local Key Bindings
@@ -176,8 +298,8 @@ with Emacs.
   #+BEGIN_SRC elisp
     (defun get-journal-file-yesterday ()
       "Return filename for yesterday's journal entry."
-      (let ((yesterday (time-subtract (current-time) (days-to-time 1)))
-            (daily-name (format-time-string "%Y%m%d" yesterday)))
+      (let* ((yesterday (time-subtract (current-time) (days-to-time 1)))
+             (daily-name (format-time-string "%Y%m%d" yesterday)))
         (expand-file-name (concat org-journal-dir daily-name))))
 
     (defun journal-file-yesterday ()
@@ -208,14 +330,13 @@ with Emacs.
     (defun journal-file-insert ()
       "Insert's the journal heading based on the file's name."
       (interactive)
-      (when (string-match "\\(20[0-9][0-9]\\)\\([0-9][0-9]\\)\\([0-9][0-9]\\)" (buffer-name))
-        (let* ((year  (string-to-number (match-string 1 (buffer-name))))
-               (month (string-to-number (match-string 2 (buffer-name))))
-               (day   (string-to-number (match-string 3 (buffer-name))))
-               (datim (encode-time 0 0 0 day month year)))
+      (let* ((year  (string-to-number (substring (buffer-name) 0 4)))
+             (month (string-to-number (substring (buffer-name) 4 6)))
+             (day   (string-to-number (substring (buffer-name) 6 8)))
+             (datim (encode-time 0 0 0 day month year)))
 
           (insert (format-time-string org-journal-date-format datim))
-          (insert "\n\n\n") ; Start with a blank separating line
+          (insert "\n\n  $0\n") ; Start with a blank separating line
 
           ;; Note: The `insert-file-contents' leaves the cursor at the
           ;; beginning, so the easiest approach is to insert these files
@@ -225,7 +346,6 @@ with Emacs.
           (when (equal (file-name-base (buffer-file-name))
                        (format-time-string "%Y%m%d"))
             (insert-file-contents "journal-dailies-end.org")
-            (insert "\n")
 
             ;; Insert dailies that only happen once a week:
             (let ((weekday-template (downcase
@@ -233,10 +353,13 @@ with Emacs.
               (when (file-exists-p weekday-template)
                 (insert-file-contents weekday-template)))
             (insert-file-contents "journal-dailies.org")
+            (insert "$0")
 
-            (previous-line 2)))))
+            (let ((contents (buffer-string)))
+              (delete-region (point-min) (point-max))
+              (yas-expand-snippet contents (point-min) (point-max))))))
 
-        (define-auto-insert "/[0-9]\\{8\\}$" [journal-file-insert])
+    (define-auto-insert "/[0-9]\\{8\\}$" [journal-file-insert])
   #+END_SRC
 
   To use this, make the following files:
@@ -441,10 +564,16 @@ with Emacs.
    HTML output:
 
    #+BEGIN_SRC elisp
-     (use-package ox-reveal
-        :init
-        (setq org-reveal-root (concat "file://" (getenv "HOME") "/Public/js/reveal.js"))
-        (setq org-reveal-postamble "Andrés Gasson"))
+          (use-package ox-reveal
+            :init
+            (setq org-reveal-root "http://cdn.jsdelivr.net/reveal.js/3.0.0/")
+            (setq org-reveal-postamble "Andrés Gasson")
+            (setq org-reveal-mathjax t)
+            )
+
+          (use-package htmlize
+            :ensure t
+          )
    #+END_SRC
 
 ** Tree Slide
@@ -470,22 +599,23 @@ with Emacs.
   evaluate them and tangle them out to a file.
 
   #+BEGIN_SRC elisp
-    (use-package org
-      :config
-      (add-to-list 'org-src-lang-modes '("dot" . "graphviz-dot"))
+        (use-package org
+          :config
+          (add-to-list 'org-src-lang-modes '("dot" . "graphviz-dot"))
 
-      (org-babel-do-load-languages 'org-babel-load-languages
-                                   '((sh         . t)
-                                     (js         . t)
-                                     (emacs-lisp . t)
-                                     (perl       . t)
-                                     (scala      . t)
-                                     (clojure    . t)
-                                     (python     . t)
-                                     (ruby       . t)
-                                     (dot        . t)
-                                     (css        . t)
-                                     (plantuml   . t))))
+          (org-babel-do-load-languages 'org-babel-load-languages
+                                       '((shell      . t)
+                                         (js         . t)
+                                         (emacs-lisp . t)
+                                         (perl       . t)
+                                         (scala      . t)
+                                         (clojure    . t)
+                                         (python     . t)
+                                         (ruby       . t)
+                                         (dot        . t)
+                                         (css        . t)
+                                         (plantuml   . t))
+        ))
   #+END_SRC
 
   This setting also addresses the issue to associate the =dot= language

@@ -167,13 +167,15 @@ and global variables are stored in =.profile= and =.zsh_profile=.
   =$2= - The remote server (which can include any options to =ssh=)
 
 #+BEGIN_SRC sh
-  function scp-git {
+  function scp_git {
     DIR=$1
     shift
     tar -cjf - --exclude .git $DIR | ssh $* 'tar -xjvf -'
   }
+#+END_SRC
 
-  function cp-git {
+#+BEGIN_SRC sh
+  function cp_git {
    rsync -av --exclude .git $1 $2
   }
 #+END_SRC

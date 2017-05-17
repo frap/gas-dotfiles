@@ -420,6 +420,25 @@ some significant differences to address. To this end, I [[http://www.howardism.o
      `remote-shell-fav-hosts-get' function has been defined."
        (hash-table-keys (remote-shell-fav-hosts-map)))
    #+END_SRC
+   Setup of tramp
+   #+BEGIN_SRC elisp
+   (use-package tramp
+  :defer t
+  :config
+  (progn
+    (with-eval-after-load 'tramp-cache
+      (setq tramp-persistency-file-name "~/.emacs.d/tramp"))
+    (setq tramp-default-user-alist '(("\\`su\\(do\\)?\\'" nil "root"))
+          ;; tramp-adb-program "/Users/hinmanm/android-sdk-macosx/platform-tools/adb"
+          ;; use the settings in ~/.ssh/config instead of Tramp's
+          tramp-use-ssh-controlmaster-options nil
+          backup-enable-predicate
+          (lambda (name)
+            (and (normal-backup-enable-predicate name)
+                 (not (let ((method (file-remote-p name 'method)))
+                        (when (stringp method)
+                          (member method '("su" "sudo"))))))))
+   #+END_SRC
 
    Most remote access is done with Tramp, so this function simplifies
    the complex Tramp string creation, mostly using an =sudo= pipe for

@@ -37,6 +37,8 @@ other systems with a graphical front-end.
      ("A-s" . save-buffer)
      ("s-+" . text-scale-increase)
      ("A-+" . text-scale-increase)
+     ("s-=" . text-scale-increase)
+     ("A-=" . text-scale-increase)
      ("s--" . text-scale-decrease)
      ("A--" . text-scale-decrease)
      ("s-_" . text-scale-decrease)
@@ -63,34 +65,39 @@ other systems with a graphical front-end.
      ("M-<right>" . forward-word))
   #+END_SRC
 
+  According to [[http://emacsninja.com/posts/making-emacs-more-presentable.html][this article]], we can update the =text-scale-XYZ=
+  functions to work on a frame instead of just a buffer:
+
+  #+BEGIN_SRC elisp
+    (defun ha/text-scale-frame-change (fn)
+      (let* ((current-font-name (frame-parameter nil 'font))
+             (decomposed-font-name (x-decompose-font-name current-font-name))
+             (font-size (string-to-int (aref decomposed-font-name 5))))
+        (aset decomposed-font-name 5 (int-to-string (funcall fn font-size)))
+        (set-frame-font (x-compose-font-name decomposed-font-name))))
+
+    (defun ha/text-scale-frame-increase ()
+      (interactive)
+      (ha/text-scale-frame-change '1+))
+
+    (defun ha/text-scale-frame-decrease ()
+      (interactive)
+      (ha/text-scale-frame-change '1-))
+
+    (bind-keys
+     ("s-C-+" . ha/text-scale-frame-increase)
+     ("A-C-+" . ha/text-scale-frame-increase)
+     ("s-C-=" . ha/text-scale-frame-increase)
+     ("A-C-=" . ha/text-scale-frame-increase)
+     ("s-C--" . ha/text-scale-frame-decrease)
+     ("A-C--" . ha/text-scale-frame-decrease))
+  #+END_SRC
 
   Gotta get rid of the bloody =C-x C-c=, for it is too close to the
   tangling key binding of =C-c C-v= ... besides, I never quit Emacs.
 
   #+BEGIN_SRC elisp
-    (defun dont-kill-emacs ()
-      "This just prints a message with the correct way to stop Emacs."
-      (interactive)
-      (message "If you really want to quit emacs, call `save-buffers-kill-emacs' directly."))
-
-    (global-set-key (kbd "C-x C-c") 'dont-kill-emacs)
-  #+END_SRC
-
-  I would like Command-W to close a frame, but only if it only has a
-  single window in it. I found this code on [[http://www.emacswiki.org/emacs/frame-cmds.el][this site]].
-
-  #+BEGIN_SRC elisp
-  (defun delete-single-window (&optional window)
-    "Remove WINDOW from the display.  Default is `selected-window'.
-  If WINDOW is the only one in its frame, then `delete-frame' too."
-    (interactive)
-    (save-current-buffer
-      (setq window (or window (selected-window)))
-      (select-window window)
-      (kill-buffer)
-      (if (one-window-p t)
-          (delete-frame)
-          (delete-window (selected-window)))))
+    (setq confirm-kill-emacs 'yes-or-no-p)
   #+END_SRC
 
 * Font Settings
@@ -229,13 +236,13 @@ other systems with a graphical front-end.
                                 `(org-level-6 ((t (,@headline ,@ha/variable-font-tuple))))
                                 `(org-level-5 ((t (,@headline ,@ha/variable-font-tuple))))
                                 `(org-level-4 ((t (,@headline ,@ha/variable-font-tuple
-                                                              :height ,(round (* 1.1 base-height))))))
+                                                              :height 1.1))))
                                 `(org-level-3 ((t (,@headline ,@ha/variable-font-tuple
-                                                              :height ,(round (* 1.25 base-height))))))
+                                                              :height 1.25))))
                                 `(org-level-2 ((t (,@headline ,@ha/variable-font-tuple
-                                                              :height ,(round (* 1.5 base-height))))))
+                                                              :height 1.5))))
                                 `(org-level-1 ((t (,@headline ,@ha/variable-font-tuple
-                                                              :height ,(round (* 1.75 base-height))))))
+                                                              :height 1.75))))
                                 `(org-document-title ((t (,@headline ,@ha/variable-font-tuple :height 1.5 :underline nil)))))))
   #+END_SRC
 
@@ -251,6 +258,8 @@ other systems with a graphical front-end.
      '(which-func          ((t (                      :foreground "orange"))))
      '(show-paren-match    ((t (:background "default" :foreground "#afa"    :weight ultra-bold))))
      '(show-paren-mismatch ((t (:background "default" :foreground "#cc6666" :weight ultra-bold)))))
+
+    (set-face-attribute 'region nil :background "#00a")
   #+END_SRC
 
 * Frame and Window Size

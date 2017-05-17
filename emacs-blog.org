@@ -75,7 +75,7 @@ coupled with some magic available to JavaScript.
            :auto-preamble        t
            :auto-postamble       nil
            :auto-sitemap         t
-           :sitemap-title        "Howardisms"
+           :sitemap-title        "Gas geekisms"
            :section-numbers      nil
            :table-of-contents    nil
            :with-toc             nil

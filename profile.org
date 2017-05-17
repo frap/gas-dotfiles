@@ -55,7 +55,7 @@ similar settings applicable to all my shells.
 
 * SSH
   Need to setup my ssh-agent properly
-#+BEGIN_SRC sh
+#+BEGIN_SRC sh :tangle no
   SSH_ENV="$HOME/.ssh/environment"
 
   function start_agent {
@@ -124,7 +124,13 @@ similar settings applicable to all my shells.
   I use boot so want to speed it up in the JVM.
 
 #+BEGIN_SRC sh
-  export BOOT_JVM_OPTIONS="-client -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:none"
+  export BOOT_JVM_OPTIONS="-client \
+                           -XX:+TieredCompilation \
+                           -XX:TieredStopAtLevel=1 \
+                           -Xmx2g \
+                           -XX:+UseConcMarkSweepGC \
+                           -XX:+CMSClassUnloadingEnabled \
+                           -Xverify:none"
 #+END_SRC
 
 * Python

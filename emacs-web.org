@@ -9,11 +9,13 @@
   I need these packages installed:
 
   #+BEGIN_SRC elisp
-    (use-package web-mode
-       :ensure t)
+        (use-package web-mode
+           :ensure t)
 
-    (use-package mustache-mode
-       :ensure t)
+        (add-to-list 'auto-mode-alist '("\\.jsp\\'" . web-mode))
+
+        (use-package mustache-mode
+           :ensure t)
   #+END_SRC
 
 * Surround with Tag
@@ -44,10 +46,10 @@
 
 * Emmet Mode
 
-  [[https://github.com/smihica/emmet-mode][Emmet-Mode]] is pretty sweet, but need to hook it up to both
+  [[https://github.com/smihica/emmet-mode][Emmet-Mode]] Im not sure about so not tangling at moment, but need to hook it up to both
   SGML (which includes HTML) and CSS:
 
-  #+BEGIN_SRC elisp
+  #+BEGIN_SRC elisp :tangle no
   (use-package emmet-mode
     :ensure t
     :commands emmet-mode
@@ -63,7 +65,7 @@
 
   Live coding for HTML/CSS/JavaScript with a [[https://github.com/skeeto/skewer-mode][Skewer server]] running in Emacs.
 
-  #+BEGIN_SRC elisp
+  #+BEGIN_SRC elisp :tangle no
     (use-package skewer-mode
       :ensure t
       :commands skewer-mode run-skewer

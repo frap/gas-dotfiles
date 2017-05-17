@@ -1,7 +1,7 @@
 #+TITLE:  Emacs Smart Mode Line
-#+AUTHOR: Howard Abrams
-#+EMAIL:  howard.abrams@gmail.com
-#+DATE:   2014 Sep 02
+#+AUTHOR: Andrew Gasson
+#+EMAIL:  agasson@red-elvis.net
+#+DATE:   2017 Feb 08
 #+TAGS:   emacs
 
 This literate programming file tangles out the configuration for
@@ -23,8 +23,8 @@ creating a better mode line in Emacs.
       (add-to-list 'sml/replacer-regexp-list '("^~/Google/" "𝔾:"))
       (add-to-list 'sml/replacer-regexp-list '("^~/google/" "𝔾:"))
       (add-to-list 'sml/replacer-regexp-list '("^~/Dropbox/" "◰:"))
+      (add-to-list 'sml/replacer-regexp-list '("^~/atea/" "𝕎:"))
       (add-to-list 'sml/replacer-regexp-list '("^~/Work/" "𝕎:"))
-      (add-to-list 'sml/replacer-regexp-list '("^~/Workspace/" "𝕎:"))
 
       (add-to-list 'sml/replacer-regexp-list '("^~/website/" "[]"))
 
@@ -37,7 +37,7 @@ creating a better mode line in Emacs.
       (add-to-list 'sml/replacer-regexp-list '("^~/Google/Notes/" "[✏]"))
       (add-to-list 'sml/replacer-regexp-list '("^~/Notes/" "[✏]"))
 
-      (add-to-list 'sml/replacer-regexp-list '("^~/Other/dot-files/" "[◕]"))
+      (add-to-list 'sml/replacer-regexp-list '("^~/Dev/emacs/gas-dotfiles/" "[◕]"))
       (add-to-list 'sml/replacer-regexp-list '("^~/Work/dot-files/" "[◕]"))
 
       (sml/apply-theme 'dark))

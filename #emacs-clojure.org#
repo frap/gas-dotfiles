@@ -72,7 +72,7 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
   - [[https://github.com/clojure-emacs/clojure-cheatsheet][clojure-cheatsheet]]
 
   Each of these packages will be configured below.
-
+** 
 * Snippets
 
   Most reliable way to add David Nolen's [[http://github.com/swannodette/clojure-snippets][clojure-snippets]] collection
@@ -92,7 +92,7 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
          :ensure t
          :mode (("\\.edn$" . clojure-mode )
                 ("\\.boot$" . clojure-mode))
-         :diminish
+         :diminish 
          :init
          (defconst clojure--prettify-symbols-alist
            '(("fn"   . ?λ)
@@ -160,6 +160,7 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
 
 * Paredit
 
+
   All Lisps, including Clojure, should use [[http://www.emacswiki.org/emacs/ParEdit][paredit]].
 
   Since it’s currently possible to use something like =join-lines=
@@ -207,7 +208,6 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
     (use-package paredit
       :bind ("M-^" . paredit-delete-indentation)
       :bind ("C-^" . paredit-remove-newlines)
-      :diminish {}
       :init
       (add-hook 'clojure-mode-hook 'paredit-mode))
   #+END_SRC
@@ -340,7 +340,7 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
 
   Using the [[https://github.com/clojure-emacs/clj-refactor.el][clj-refactor]] (C-c . to refactor) project:
 
-  #+BEGIN_SRC elisp :tangle no
+  #+BEGIN_SRC elisp
     (use-package clj-refactor
       :ensure t
       :init

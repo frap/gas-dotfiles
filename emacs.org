@@ -282,12 +282,12 @@
     (require 'init-mode-line2)
   #+END_SRC
 
-  And the best colored highlighting of selected text needs to be both
+  And the best coloured highlighting of selected text needs to be both
   bright, but not obscure the white text in the foreground (see
   =list-colors-display=). Favorites so far are =purple4= and =DarkOrange3=:
 
   #+BEGIN_SRC elisp
-    (set-face-background 'region "blue3")
+    (set-face-background 'region "purple4")
   #+END_SRC
 
   Most of the display settings actually come from the [[file:emacs-mac.org][Mac initialization file]].
@@ -319,7 +319,8 @@
 
    #+BEGIN_SRC elisp
      (use-package fill
-       :bind ("C-c T f" . auto-fill-mode)
+       :bind (("C-c T f" . auto-fill-mode)
+              ("C-c T t" . toggle-truncate-lines))
        :init (add-hook 'org-mode-hook 'turn-on-auto-fill)
        :diminish auto-fill-mode)
    #+END_SRC
@@ -593,25 +594,26 @@
    #+Begin_SRC elisp
      (use-package avy
        :ensure t
-       :commands avy-goto-word-1 avy-goto-char-1 avy-goto-line avy-goto-char-timer
-       :bind
-       ("C-c j"   . avy-goto-word-1)
-       ("A-j"     . avy-goto-word-1)    ; The Mac Command key
-       ("s-j"     . avy-goto-word-1)    ; The Command key on Linux
-       ("A-h"     . avy-goto-char-2)
-       ("s-h"     . avy-goto-char-2)
-       ("C-c k k" . avy-goto-char-timer)
-       ("A-J"     . avy-goto-char-timer)    ; The Mac Command key
-       ("s-J"     . avy-goto-char-timer)    ; The Command key on Linux
-       ("C-c k j" . avy-goto-word-1)
-       ("C-c k c" . avy-goto-char-1)
-       ("C-c k l" . avy-goto-line)
-       ("C-c k p" . avy-pop-mark)
-       ("A-,"     . avy-pop-mark))
+       :init (setq avy-background t))
    #+END_SRC
 
-   Other options (that require more of my memory), are bound
-   to =C-c k=.
+   Shame that the =:bind= option for =use-package= doesn't actually work.
+   Let's do a temporary fix:
+
+   #+BEGIN_SRC elisp
+     (global-set-key (kbd "s-h") 'avy-goto-char-timer)
+     (global-set-key (kbd "s-H") 'avy-pop-mark)
+   #+END_SRC
+
+   The [[https://github.com/tam17aki/ace-isearch][ace-isearch]] looks like a simple approach to integrate many
+   types of searches into a single entry point:
+
+   #+BEGIN_SRC elisp :tangle no
+     (use-package ace-isearch
+       :ensure t
+       :init
+       (global-ace-isearch-mode +1))
+   #+END_SRC
 
 ** Unfill Paragraph
 
@@ -649,35 +651,24 @@
        :bind (("C-c C-. ."   . mc/mark-all-dwim)
               ("C-c C-. C-." . mc/mark-all-like-this-dwim)
               ("C-c C-. n"   . mc/mark-next-like-this)
+              ("C-c C-. C-n" . mc/mark-next-like-this)
               ("C-c C-. p"   . mc/mark-previous-like-this)
+              ("C-c C-. C-p" . mc/mark-previous-like-this)
               ("C-c C-. a"   . mc/mark-all-like-this)
+              ("C-c C-. C-a" . mc/mark-all-like-this)
               ("C-c C-. N"   . mc/mark-next-symbol-like-this)
+              ("C-c C-. C-N" . mc/mark-next-symbol-like-this)
               ("C-c C-. P"   . mc/mark-previous-symbol-like-this)
+              ("C-c C-. C-P" . mc/mark-previous-symbol-like-this)
               ("C-c C-. A"   . mc/mark-all-symbols-like-this)
+              ("C-c C-. C-A" . mc/mark-all-symbols-like-this)
               ("C-c C-. f"   . mc/mark-all-like-this-in-defun)
+              ("C-c C-. C-f" . mc/mark-all-like-this-in-defun)
               ("C-c C-. l"   . mc/edit-lines)
-              ("C-c C-. e"   . mc/edit-ends-of-lines)))
-   #+END_SRC
-
-   #+BEGIN_SRC elisp :tangle no
-     (use-package multiple-cursors
-       :ensure t
-       :config
-       (global-set-key
-        (kbd "C-c C-.")
-        (defhydra hydra-multiple-cursors ()
-          "multiple-cursors"
-          ("." mc/mark-all-dwim                   "all-dwim")
-          ("C-." mc/mark-all-like-this-dwim       "all-like-dwim")
-          ("n" mc/mark-next-like-this             "next")
-          ("p" mc/mark-previous-like-this         "previous")
-          ("a" mc/mark-all-like-this              "mark-all")
-          ("N" mc/mark-next-symbol-like-this      "next-symbol")
-          ("P" mc/mark-previous-symbol-like-this  "previous-symbol")
-          ("A" mc/mark-all-symbols-like-this      "all-symbols")
-          ("f" mc/mark-all-like-this-in-defun     "in-func")
-          ("l" mc/edit-lines                      "all-lines")
-          ("e" mc/edit-ends-of-lines              "end-lines"))))
+              ("C-c C-. C-l" . mc/edit-lines)
+              ("C-c C-. e"   . mc/edit-ends-of-lines)
+              ("C-c C-. C-e" . mc/edit-ends-of-lines)
+              ("C-M-<mouse-1>" . mc/add-cursor-on-click)))
    #+END_SRC
 
 ** Expand Region
@@ -956,6 +947,24 @@
       (add-hook 'ido-make-dir-list-hook 'ido-sort-mtime)
     #+END_SRC
 
+*** IDO remove history from tramp
+
+    #+BEGIN_SRC elisp
+    (defun ido-remove-tramp-from-cache nil
+    "Remove any TRAMP entries from `ido-dir-file-cache'.
+    This stops tramp from trying to connect to remote hosts on emacs startup,
+    which can be very annoying."
+    (interactive)
+    (setq ido-dir-file-cache
+	  (cl-remove-if
+	   (lambda (x)
+	     (string-match "/\\(rsh\\|ssh\\|telnet\\|su\\|sudo\\|sshx\\|krlogin\\|ksu\\|rcp\\|scp\\|rsync\\|scpx\\|fcp\\|nc\\|ftp\\|smb\\|adb\\):" (car x)))
+	   ido-dir-file-cache)))
+  ;; redefine `ido-kill-emacs-hook' so that cache is cleaned before being saved
+   (defun ido-kill-emacs-hook ()
+     (ido-remove-tramp-from-cache)
+     (ido-save-history))
+    #+END_SRC
 *** Editing Root Files
 
     Once I wrote a =find-file-as-root= function (graciously borrowed from
@@ -965,8 +974,8 @@
 
     My version works with both local and remotely access files:
 
-    #+BEGIN_SRC elisp
-      (defadvice ido-find-file (after find-file-sudo activate)
+    #+BEGIN_SRC elisp :tangle no
+       (defadvice ido-find-file (after find-file-sudo activate)
         "Find file as root if necessary."
         (unless (and buffer-file-name
                      (file-writable-p buffer-file-name))
@@ -999,7 +1008,7 @@
    Obviously, Helm would be helpful if I can learn all the bindings,
    so:
 
-   #+BEGIN_SRC elisp
+   #+BEGIN_SRC elisp tangle:no
      (use-package helm
        :ensure t
        :init
@@ -1458,7 +1467,7 @@
    codebase.
 
    For normal bookmarks, I'd rather use Helm:
-   #+BEGIN_SRC elisp
+   #+BEGIN_SRC elisp  tangle:no
      (use-package bookmark
        :init (setq bookmark-save-flag 1)
        :config
@@ -1699,9 +1708,12 @@
    a /language option/:
 
    #+BEGIN_SRC sh :tangle ~/.ctags :comments no
-    --langdef=org
-    --langmap=org:.org
-    --regex-org=/^\*+[ \t]+([a-zA-Z0-9_ ]+)/\1/d,definition/
+     --langdef=org
+     --langmap=org:.org
+     --regex-org=/^\*+[ \t]+([a-zA-Z0-9_ ]+)/\1/d,definition/
+
+     --exclude=vendor
+     --exclude=.git
    #+END_SRC
 
    We access stuff by loading the =etags= package:
@@ -1731,7 +1743,7 @@
    With the fancy new [[https://marmalade-repo.org/packages/ctags-update][ctags-update]] package, we can update the tags file
    whenever we save a file:
 
-   #+BEGIN_SRC elisp
+   #+BEGIN_SRC elisp :tangle no
      (use-package ctags-update
        :ensure t
        :config
@@ -1775,20 +1787,29 @@
    #+END_SRC
 
    Emacs 25 changed has now deprecated the famous [[info:emacs#Tags][Tags and Friends]],
-   like =find-tags= for =xref=. Some point, I will have to learn how
-   to configure it, but until then, I'll just rebind to my old mates:
-
-   #+BEGIN_SRC elisp :tangle no
-     (global-set-key (kbd "M-.") 'find-tag)
-     (global-set-key (kbd "C-M-.") 'find-tag-regexp)
-     (global-set-key (kbd "M-,") 'pop-tag-mark)
-     (global-set-key (kbd "M-i") 'imenu-anywhere)
-   #+END_SRC
+   like =find-tags= for =xref=.
 
    Note: This prompt needs to go away:
 
    #+BEGIN_SRC elisp
      (setq tags-add-tables nil)
+   #+END_SRC
+
+   What if the marker stack is empty? M-, returns an error. Let's do a
+   DWIM function:
+
+   #+BEGIN_SRC elisp
+     (defun ha/xref-pop-marker-stack (arg)
+       "Pops the marker stack, unless I haven't searched a tag/xref
+     with `M-.' and there is nothing to return to, in which case, let's
+     jump back to the last change."
+       (interactive "P")
+       (condition-case nil
+           (xref-pop-marker-stack)
+         (error
+          (goto-last-change arg))))
+
+     (bind-key "M-," 'ha/xref-pop-marker-stack)
    #+END_SRC
 
 *** Code Block Folding
@@ -2004,7 +2025,7 @@
 
    As soon as a I have a project that requires Java (and doesn’t allow
    me to work on either Clojure or Scala, I’ll update my old Java
-   initialization section.
+   initialisation section.
 
    #+BEGIN_SRC elisp
      (defun my-c-mode-hook ()
@@ -2047,7 +2068,7 @@
 
    See [[file:emacs-web.org][emacs-web.el]] for details on working with HTML and its ilk.
 
-   #+BEGIN_SRC elisp :tangle no
+   #+BEGIN_SRC elisp
      (require 'init-web)
    #+END_SRC
 
@@ -2167,10 +2188,7 @@
 
    #+BEGIN_SRC elisp
      (use-package graphviz-dot-mode
-                  :ensure t
-                  :init
-                  (setq default-tab-width 2)
-     )
+        :ensure t)
    #+END_SRC
 
 * Applications
@@ -2224,7 +2242,50 @@
                     (bury-buffer))))))
 
        (define-key jabber-chat-mode-map [escape] 'my-jabber-chat-delete-or-bury))
-   #+END_SRC
+#+END_SRC
+
+* Frivolous
+
+  Life must be more whimsical. To begin, install the =fortune= package:
+  #+BEGIN_SRC sh :tangle no
+    brew install fortune   # Installs in /usr/local/share/games/fortunes
+  #+END_SRC
+  Or, if on Ubuntu:
+  #+BEGIN_SRC sh :tangle no
+    sudo apt-get install fortune # Installs in /usr/share/games/fortunes
+  #+END_SRC
+
+  Let's create a variable for knowing if we have everything installed:
+  #+BEGIN_SRC elisp
+    (defvar ha/can-haz-cookie-p nil "Is true if the fortune system has been correctly configured")
+  #+END_SRC
+
+  Since fortune installs quite a few files (some of which we don't
+  like), and we may want to run the same code on multiple operating
+  systems, we write a little wrapper function around the =cookie=
+  function to pick one of our favorite files (if available) at random:
+
+  #+BEGIN_SRC elisp
+    (defun ha/cookie ()
+      "Returns a phrase from a random `fortune' file from standard locations."
+      (interactive)
+      (condition-case nil
+          (let* ((favs "computers$\\|definitions$\\|drugs$\\|fortunes$\\|goedel$\\|linuxcookie$\\|magic$")
+                 (paths '("/usr/share/games/fortunes" "/usr/local/share/games/fortunes"))
+                 (path (car (-filter 'file-exists-p paths)))
+                 (files (directory-files path t favs))
+                 (file (nth (random (length files)) files)))
+            (setq ha/can-haz-cookie-p t)
+            (message "%s" (cookie file)))
+        (error (message "Happy Hacking!"))))
+  #+END_SRC
+
+  And let's display a frivolous message each time we return to Emacs:
+
+  #+BEGIN_SRC elisp
+    (when ha/can-haz-cookie-p
+      (add-hook 'focus-in-hook 'ha/cookie))
+  #+END_SRC
 
 * Technical Artifacts
 
