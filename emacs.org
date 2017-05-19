@@ -2068,7 +2068,7 @@
 
    See [[file:emacs-web.org][emacs-web.el]] for details on working with HTML and its ilk.
 
-   #+BEGIN_SRC elisp
+   #+BEGIN_SRC elisp :tangle no
      (require 'init-web)
    #+END_SRC
 
