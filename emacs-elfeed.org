@@ -11,7 +11,7 @@ Let's load it up if it is installed.
 #+BEGIN_SRC elisp
   (use-package elfeed
     :commands elfeed
-    :init     (define-key personal-global-map (kbd "r") 'elfeed))
+    :init     (defirne-key personal-global-map (kbd "r") 'elfeed))
 #+END_SRC
 
 * The Feeds
