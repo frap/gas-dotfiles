@@ -557,7 +557,10 @@ The time format is the heading for each section. I set it to a
           (use-package htmlize
             :ensure t
           )
-   #+END_SRC
+
+#+END_SRC
+
+
 
 ** Tree Slide
 
@@ -572,10 +575,8 @@ The time format is the heading for each section. I set it to a
         :ensure t
         :init
         (setq org-tree-slide-skip-outline-level 4)
-        (org-tree-slide-simple-profile))
-   #+END_SRC
-
-* Literate Programming
+        (org-tree-slide-simple-prof
+** Literate Programming
 
   The trick to literate programming is in the [[http://orgmode.org/worg/org-contrib/babel/intro.html][Babel project]], which
   allows org-mode to not only interpret source code blocks, but
