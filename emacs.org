@@ -631,7 +631,7 @@
      (define-key global-map "\M-Q" 'unfill-paragraph)
    #+END_SRC
 
-** General Behavior Fixes
+** General Behaviour Fixes
 
    The subtle changes I've been making to Emacs behaviour has grown
    until I felt I should move it into [[file:emacs-fixes.org][its own source file]].

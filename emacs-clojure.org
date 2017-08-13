@@ -26,13 +26,13 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
   To keep from having to add the same information to /every/
   =project.clj= file, place the following in =~/.lein/profiles.clj=:
 
-  #+BEGIN_SRC clojure :tangle no
-  {:repl {:plugins [[cider/cider-nrepl "0.14.0"]
-                    [jonase/eastwood "0.2.3"]
-                    [refactor-nrepl "2.2.0"]
-                    [lein-cljfmt "0.5.5"]]
-          :dependencies [[org.clojure/clojure "1.9.0-alpha14"]
-                         [acyclic/squiggly-clojure "0.1.6"]
+  #+BEGIN_SRC clojure :tangle ~/.lein/profiles.clj
+  {:repl {:plugins [[cider/cider-nrepl "0.15.0"]
+                    [jonase/eastwood "0.2.4"]
+                   ;; [refactor-nrepl "2.3.1"]
+                    [lein-cljfmt "0.5.7"]]
+          :dependencies [[org.clojure/clojure "1.9.0-alpha17"]
+                         [acyclic/squiggly-clojure "0.1.8"]
                          [org.clojure/tools.nrepl "0.2.12"]]}}
   #+END_SRC
 
@@ -49,8 +49,8 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
   (require 'boot.repl)
   (swap! @(resolve 'boot.repl/*default-dependencies*)
          concat '[[org.clojure/tools.nrepl "0.2.12"]
-                  [cider/cider-nrepl "0.14.0"]
-                  [refactor-nrepl "2.2.0"]])
+                  [cider/cider-nrepl "0.15.0"]
+                  [refactor-nrepl "2.3.1"]])
   (swap! @(resolve 'boot.repl/*default-middleware*)
          concat '[cider.nrepl/cider-middleware
                   refactor-nrepl.middleware/wrap-refactor])
@@ -250,37 +250,39 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
   * C-c C-v C-c send-and-evaluate-sexp
 
   #+BEGIN_SRC elisp
-    (use-package cider
-      :ensure t
-      :commands (cider cider-connect cider-jack-in)
+      (use-package cider
+        :ensure t
+        :commands (cider cider-connect cider-jack-in)
 
-      :init
-      (setq cider-auto-select-error-buffer t
-            cider-repl-pop-to-buffer-on-connect nil
-            cider-repl-use-clojure-font-lock t
-            cider-repl-wrap-history t
-            cider-repl-history-size 1000
-            cider-show-error-buffer t
-            nrepl-hide-special-buffers t
-            ;; Stop error buffer from popping up while working in buffers other than the REPL:
-            nrepl-popup-stacktraces nil
-            )
+        :init
+        (setq cider-auto-select-error-buffer t
+              cider-repl-pop-to-buffer-on-connect nil
+              cider-repl-use-clojure-font-lock t
+              cider-repl-wrap-history t
+              cider-repl-history-size 1000
+              cider-show-error-buffer t
+              nrepl-hide-special-buffers t
+              ;; Stop error buffer from popping up while working in buffers other than the REPL:
+              nrepl-popup-stacktraces nil
+              ;; lein setup for duct
+              cider-cljs-lein-repl "(do (use 'figwheel-sidecar.repl-api) (dev) (go) (start-figwheel!) (cljs-repl))"
+              )
 
-  ;;    (add-hook 'cider-mode-hook 'cider-turn-on-eldoc-mode)
-  ;;    (add-hook 'cider-mode-hook 'company-mode)
+    ;;    (add-hook 'cider-mode-hook 'cider-turn-on-eldoc-mode)
+    ;;    (add-hook 'cider-mode-hook 'company-mode)
 
-      (add-hook 'cider-repl-mode-hook 'paredit-mode)
-      (add-hook 'cider-repl-mode-hook 'superword-mode)
-   ;;   (add-hook 'cider-repl-mode-hook #'company-mode)
-   ;;   (add-hook 'cider-test-report-mode 'jcf-soft-wrap)
+        (add-hook 'cider-repl-mode-hook 'paredit-mode)
+        (add-hook 'cider-repl-mode-hook 'superword-mode)
+     ;;   (add-hook 'cider-repl-mode-hook #'company-mode)
+     ;;   (add-hook 'cider-test-report-mode 'jcf-soft-wrap)
 
-      :bind (:map cider-mode-map
-             ("C-c C-v C-c" . cider-send-and-evaluate-sexp)
-             ("C-c C-p"     . cider-eval-print-last-sexp))
+        :bind (:map cider-mode-map
+               ("C-c C-v C-c" . cider-send-and-evaluate-sexp)
+               ("C-c C-p"     . cider-eval-print-last-sexp))
 
-      :config
-      (use-package slamhound)
-      )
+        :config
+        (use-package slamhound)
+        )
   #+END_SRC
 
   What about doing the evaluation but re-inserting the results as a
