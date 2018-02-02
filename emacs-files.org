@@ -1,0 +1,369 @@
+#+TITLE:  Emacs Files
+#+AUTHOR: Andrés Gasson
+#+EMAIL:  agasson@red-elvis.net
+#+DATE:   2017 Nov 09
+#+TAGS:   emacs
+
+This literate programming file tangles out the configuration for
+file loading features of my emacs config.
+
+* Loading and Finding Files
+** Dired Options
+
+   Between =M-!= and starting [[Eshell][Eshell]], comes =dired= (=C-x d=).
+
+   #+BEGIN_SRC elisp
+     (setq ls-lisp-use-insert-directory-program nil)
+   #+END_SRC
+
+   This enhancement to dired hides the ugly details until you hit
+   '(' and shows the details with ')'. I also change the [...] to a
+   simple asterisk.
+
+   #+BEGIN_SRC elisp
+     (use-package dired-details
+       :ensure t
+       :init   (setq dired-details-hidden-string "* ")
+       :config (dired-details-install))
+   #+END_SRC
+
+   The ability to create a dired buffer based on searching for files
+   in a directory tree with =find-name-dired= is fantastic. The
+   [[http://www.masteringemacs.org/articles/2011/03/25/working-multiple-files-dired/][following magic]] optimises this approach:
+
+   #+BEGIN_SRC elisp
+     (use-package find-dired
+        :ensure t
+        :init (setq find-ls-option '("-print0 | xargs -0 ls -od" . "-od")))
+   #+END_SRC
+
+   The [[http://pragmaticemacs.com/emacs/quickly-preview-images-and-other-files-with-peep-dired/][peep project]] allows you to preview files before loading them
+   into a dedicated buffer:
+
+   #+BEGIN_SRC elisp
+     (use-package peep-dired
+       :defer t ; don't access `dired-mode-map' until `peep-dired' is loaded
+       :bind (:map dired-mode-map
+                   ("P" . peep-dired)))
+   #+END_SRC
+
+   The [[http://www.masteringemacs.org/articles/2014/04/10/dired-shell-commands-find-xargs-replacement/][dired-x project]] seems useful:
+
+   #+BEGIN_SRC elisp
+     (use-package dired-x)
+   #+END_SRC
+
+** IDO (Interactively DO Things)
+
+   According to [[http://www.masteringemacs.org/articles/2010/10/10/introduction-to-ido-mode/][Mickey]], IDO is the greatest thing.
+
+   #+BEGIN_SRC elisp
+     (use-package ido
+       :ensure t
+       :init  (setq ido-enable-flex-matching t
+                    ido-ignore-extensions t
+                    ido-use-virtual-buffers t
+                    ido-everywhere t)
+       :config
+       (ido-mode 1)
+       (ido-everywhere 1)
+       (add-to-list 'completion-ignored-extensions ".pyc"))
+   #+END_SRC
+
+   Add to IDO, the [[https://github.com/lewang/flx][FLX]] package:
+
+   #+BEGIN_SRC elisp
+     (use-package flx-ido
+        :ensure t
+        :init (setq ido-enable-flex-matching t
+                    ido-use-faces nil)
+        :config (flx-ido-mode 1))
+   #+END_SRC
+
+   According to [[https://gist.github.com/rkneufeld/5126926][Ryan Neufeld]], we could make IDO work vertically,
+   which is much easier to read. For this, I use [[https://github.com/gempesaw/ido-vertical-mode.el][ido-vertically]]:
+
+   #+BEGIN_SRC elisp
+     (use-package ido-vertical-mode
+       :ensure t
+       :init               ; I like up and down arrow keys:
+       (setq ido-vertical-define-keys 'C-n-C-p-up-and-down)
+       :config
+       (ido-vertical-mode 1))
+   #+END_SRC
+
+*** IDO File Listing by Modified Time
+
+    This sorts an IDO filelist by /mtime/ instead of alphabetically.
+
+    #+BEGIN_SRC elisp
+      (defun ido-sort-mtime ()
+        "Reorder the IDO file list to sort from most recently modified."
+        (setq ido-temp-list
+              (sort ido-temp-list
+                    (lambda (a b)
+                      (ignore-errors
+                        (time-less-p
+                         (sixth (file-attributes (concat ido-current-directory b)))
+                         (sixth (file-attributes (concat ido-current-directory a))))))))
+        (ido-to-end  ;; move . files to end (again)
+         (delq nil (mapcar
+                    (lambda (x) (and (char-equal (string-to-char x) ?.) x))
+                    ido-temp-list))))
+
+      (add-hook 'ido-make-file-list-hook 'ido-sort-mtime)
+      (add-hook 'ido-make-dir-list-hook 'ido-sort-mtime)
+    #+END_SRC
+
+*** IDO remove history from tramp
+
+    #+BEGIN_SRC elisp
+    (defun ido-remove-tramp-from-cache nil
+    "Remove any TRAMP entries from `ido-dir-file-cache'.
+    This stops tramp from trying to connect to remote hosts on emacs startup,
+    which can be very annoying."
+    (interactive)
+    (setq ido-dir-file-cache
+	  (cl-remove-if
+	   (lambda (x)
+	     (string-match "/\\(rsh\\|ssh\\|telnet\\|su\\|sudo\\|sshx\\|krlogin\\|ksu\\|rcp\\|scp\\|rsync\\|scpx\\|fcp\\|nc\\|ftp\\|smb\\|adb\\):" (car x)))
+	   ido-dir-file-cache)))
+  ;; redefine `ido-kill-emacs-hook' so that cache is cleaned before being saved
+   (defun ido-kill-emacs-hook ()
+     (ido-remove-tramp-from-cache)
+     (ido-save-history))
+    #+END_SRC
+*** Editing Root Files
+
+    Once I wrote a =find-file-as-root= function (graciously borrowed from
+    [[http://emacs-fu.blogspot.com/2013/03/editing-with-root-privileges-once-more.html][Emacs Fu]]), however, [[http://emacsredux.com/blog/2013/04/21/edit-files-as-root/][bbatsov]] gave me a better idea to lend some
+    /advice/ to =find-file=, so that non-writable files would be
+    automatically /re-opened/ using the =sudo= feature of Tramp.
+
+    My version works with both local and remotely access files:
+
+    #+BEGIN_SRC elisp :tangle no
+       (defadvice ido-find-file (after find-file-sudo activate)
+        "Find file as root if necessary."
+        (unless (and buffer-file-name
+                     (file-writable-p buffer-file-name))
+          (let* ((file-name (buffer-file-name))
+                 (file-root (if (string-match "/ssh:\\([^:]+\\):\\(.*\\)" file-name)
+                                (concat "/ssh:"  (match-string 1 file-name)
+                                        "|sudo:" (match-string 1 file-name)
+                                        ":"      (match-string 2 file-name))
+                              (concat "/sudo:localhost:" file-name))))
+            (find-alternate-file file-root))))
+    #+END_SRC
+
+    No special key-bindings, just load up a file, and if I can't write
+    it, it will automatically ask me for my credentials, and away I go.
+
+** SMEX
+
+   Built using [[*IDO%20(Interactively%20DO%20Things)][IDO]] to do something similar but with =M-x= commands:
+
+   #+BEGIN_SRC elisp
+     (use-package smex
+       :ensure t
+       :init (smex-initialize)
+       :bind ("M-x" . smex)
+             ("M-X" . smex-major-mode-commands))
+   #+END_SRC
+
+** Helm
+
+   Obviously, Helm would be helpful if I can learn all the bindings,
+   so:
+
+   #+BEGIN_SRC elisp
+     (use-package helm
+       :ensure t
+       :init
+       (use-package helm-config))   ;; Binds C-x c to the helm bidness.
+   #+END_SRC
+
+   Re-read [[http://tuhdo.github.io/helm-intro.html][this essay on Helm]].
+
+*** Silver Searcher
+
+    With [[https://twitter.com/_wilfredh][Wilfred Hughes]] fancy [[https://github.com/Wilfred/ag.el/#agel][ag package]], I’ve switch from [[http://beyondgrep.com][ack]] to the
+    [[http://geoff.greer.fm/2011/12/27/the-silver-searcher-better-than-ack/][Silver Searcher]]:
+
+    #+BEGIN_SRC sh :tangle no
+      brew install ag
+    #+END_SRC
+
+    Best part about the ag package, is not needing any configuration
+    (as all functions are load-on demand).
+
+    - =ag-project-at-point= :: sets the query with the word at point, use: =C-c p s s=
+    - =ag-regexp= :: searches for regular expressions in a chosen
+                     directory (*Note:* the =ag= command prompts with
+                     =regexp=, but it adds a =--literal= option to the command)
+    - =C-u= :: Adding a prefix adds command line options, like =-s= or
+               =-i= to specify case-sensitivity.
+
+    Create collection of [[file:~/.agignore][ignorable files]] so it doesn’t look in backup files:
+
+    #+BEGIN_SRC org :tangle ~/.agignore
+      #.*
+    #+END_SRC
+
+    Using the latest version of =ag=? Highlight the keywords:
+
+    #+BEGIN_SRC elisp :tangle no
+      (use-package helm-ag
+        :ensure    t
+        :commands  pt
+        :init      (setq ag-highlight-search t)
+        :config    (add-to-list 'ag-arguments "--word-regexp")
+   )
+    #+END_SRC
+
+    Personally, I’m almost /always/ looking for full words:
+
+*** Spotlight
+
+    However, I also need a global /indexing/ approach to searching
+    through my notes, and since I'm usually on a Mac, I might as well
+    use the /Spotlight/ service that is already running:
+
+    #+BEGIN_SRC elisp
+      (setq locate-command "mdfind")  ;; Use Mac OS X's Spotlight
+      (global-set-key (kbd "C-c f l") 'locate)
+    #+END_SRC
+
+    The following function wraps =locate-with-filter= to only grab
+    =org-mode= files:
+
+    #+BEGIN_SRC elisp
+      (defun locate-org-files (search-string)
+        "Adjust `locate-with-filter' to only search `org-mode' files with SEARCH-STRING."
+        (interactive "sSearch string: ")
+        (locate-with-filter search-string ".org$"))
+
+      (global-set-key (kbd "C-c f o") 'locate-org-files)
+    #+END_SRC
+
+    We /could/ limit the location that Spotlight request searches:
+
+    #+BEGIN_SRC elisp :tangle no
+      (defun locate-my-org-files (search-string)
+        (let ((tech (concat (getenv "HOME") "/technical"))
+              (pers (concat (getenv "HOME") "/personal"))
+              (note (concat (getenv "HOME") "/notes"))
+              (jrnl (concat (getenv "HOME") "/journal")))
+          (-flatten (list "mdfind"
+                   (if (file-exists-p tech) (list "-onlyin" tech))
+                   (if (file-exists-p pers) (list "-onlyin" pers))
+                   (if (file-exists-p note) (list "-onlyin" note))
+                   (if (file-exists-p jrnl) (list "-onlyin" jrnl))
+                   "-interpret" search-string))))
+
+      (setq locate-make-command-line 'locate-my-org-files)
+    #+END_SRC
+
+    However, the problem with locate, is it doesn't show me any
+    context. My [[file:bin/find-notes][find-notes]] script uses both =mdfind= and =grep= to both
+    better search and display some useful context.
+
+    Just need to wrap that in a function:
+
+    #+BEGIN_SRC elisp
+      (defun find-notes (words)
+        "Search `org-mode' files in specific directories for WORDS.
+
+      Uses `find-notes' shell script as a better grep utility.  Not only
+      does it show the results in a clickable list, it also highlights
+      the result, allowing us to put more context in the output."
+        (interactive "sSearch for words:")
+        (let ((program (concat (getenv "HOME") "/bin/find-notes"))
+              (buffer-name (concat "*find-notes: " words "*")))
+          (call-process program nil buffer-name t words)
+          (switch-to-buffer buffer-name)
+          (read-only-mode 1)
+          (grep-mode)
+          (toggle-truncate-lines)
+          (beginning-of-buffer)
+          (dolist (word (split-string words))
+            (highlight-regexp word))))
+
+      (global-set-key (kbd "C-x C-n") 'find-notes)
+      (global-set-key (kbd "C-c f n") 'find-notes)
+    #+END_SRC
+
+** Recent File List
+
+   According to [[http://www.emacswiki.org/emacs-es/RecentFiles][this article]], Emacs already has the recent file
+   listing available, just not turned on.
+
+   #+BEGIN_SRC elisp
+     (use-package recentf
+       :init
+       (setq recentf-max-menu-items 25
+             recentf-auto-cleanup 'never
+             recentf-keep '(file-remote-p file-readable-p))
+       (recentf-mode 1)
+       (let ((last-ido "~/.emacs.d/ido.last"))
+         (when (file-exists-p last-ido)
+           (delete-file last-ido)))
+       :bind ("C-c f f" . recentf-open-files))
+   #+END_SRC
+
+   We do not want to stat all the files when Emacs starts up because
+   files read by Tramp will slow down the start time.
+
+** Backup Settings
+
+   This setting moves all backup files to a central location.
+   Got it from [[http://whattheemacsd.com/init.el-02.html][this page]].
+
+   #+BEGIN_SRC elisp
+     (setq backup-directory-alist
+           `(("." . ,(expand-file-name
+                      (gas/emacs-subdirectory "backups")))))
+   #+END_SRC
+
+   Tramp should do the same:
+   #+BEGIN_SRC elisp
+     (setq tramp-backup-directory-alist backup-directory-alist)
+   #+END_SRC
+
+   Make backups of files, even when they're in version control:
+   #+BEGIN_SRC elisp
+     (setq vc-make-backup-files t)
+   #+END_SRC
+
+   And let’s make sure our files are saved if we wander off and
+   defocus the Emacs application:
+
+   #+BEGIN_SRC elisp
+     (defun save-all ()
+       "Save all dirty buffers without asking for confirmation."
+       (interactive)
+       (save-some-buffers t))
+
+     (add-hook 'focus-out-hook 'save-all)
+   #+END_SRC
+
+
+* Technical Artifacts
+
+  Make sure that we can simply =require= this library.
+
+#+BEGIN_SRC elisp
+  (provide 'init-files)
+#+END_SRC
+
+  Before you can build this on a new system, make sure that you put
+  the cursor over any of these properties, and hit: =C-c C-c=
+
+#+PROPERTY:    tangle ~/.emacs.d/elisp/init-files.el
+#+DESCRIPTION: A literate programming version of my Emacs File Loading Initialisation
+#+PROPERTY:    results silent
+#+PROPERTY:    eval no-export
+#+PROPERTY:    comments org
+#+OPTIONS:     num:nil toc:nil todo:nil tasks:nil tags:nil
+#+OPTIONS:     skip:nil author:nil email:nil creator:nil timestamp:nil
+#+INFOJS_OPT:  view:nil toc:nil ltoc:t mouse:underline buttons:0 path:http://orgmode.org/org-info.js

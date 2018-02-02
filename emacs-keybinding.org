@@ -1,0 +1,633 @@
+#+TITLE:  Keybindings for Emacs
+#+AUTHOR: Andrés Gasson
+#+EMAIL:  gas@ateasystems.com
+#+DATE:   Sunday, January 07 2018
+#+TAGS:   keybindings emacs
+
+* Key Bindings
+** Displaying Command Sequences
+
+   Many command sequences may be logical, but who can remember them
+   all?
+
+   #+BEGIN_SRC elisp
+     (use-package which-key
+       :ensure t
+       :defer 10
+       :diminish which-key-mode
+       :config
+
+       ;; Replacements for how KEY is replaced when which-key displays
+       ;;   KEY → FUNCTION
+       ;; Eg: After "C-c", display "right → winner-redo" as "▶ → winner-redo"
+       (setq which-key-key-replacement-alist
+             '(("<\\([[:alnum:]-]+\\)>" . "\\1")
+               ("left"                  . "◀")
+               ("right"                 . "▶")
+               ("up"                    . "▲")
+               ("down"                  . "▼")
+               ("delete"                . "DEL") ; delete key
+               ("\\`DEL\\'"             . "BS") ; backspace key
+               ("next"                  . "PgDn")
+               ("prior"                 . "PgUp"))
+
+             ;; List of "special" keys for which a KEY is displayed as just
+             ;; K but with "inverted video" face... not sure I like this.
+             which-key-special-keys '("RET" "DEL" ; delete key
+                                      "ESC" "BS" ; backspace key
+                                      "SPC" "TAB")
+
+             ;; Replacements for how part or whole of FUNCTION is replaced:
+             which-key-description-replacement-alist
+             '(("Prefix Command" . "prefix")
+               ("\\`calc-"       . "") ; Hide "calc-" prefixes when listing M-x calc keys
+               ("\\`projectile-" . "𝓟/")
+               ("\\`org-babel-"  . "ob/"))
+
+             ;; Underlines commands to emphasize some functions:
+             which-key-highlighted-command-list
+             '("\\(rectangle-\\)\\|\\(-rectangle\\)"
+               "\\`org-"))
+
+       ;; Change what string to display for a given *complete* key binding
+       ;; Eg: After "C-x", display "8 → +unicode" instead of "8 → +prefix"
+       (which-key-add-key-based-replacements
+         "C-x 8"   "unicode"
+         "C-c T"   "toggles-"
+         "C-c p s" "projectile-search"
+         "C-c p 4" "projectile-other-buffer-"
+         "C-x a"   "abbrev/expand"
+         "C-x r"   "rect/reg"
+         "C-c /"   "engine-mode-map"
+         "C-c C-v" "org-babel")
+
+       (which-key-mode 1))
+   #+END_SRC
+
+** Function Key Definitions
+
+   Emacs has never seen a need for function keys, and I agree...for
+   the most part. For things really /away from the flow/, they don't
+   seem to bad. But what are those?
+
+   - *F1* - Help? Isn't Control-H good enough?
+   - *F2* - Special odd, little-used characters that I have to think
+            about before remembering what its binding.
+   - *F3* - Define a keyboard macro
+   - *F4* - Replay a keyboard macro
+   - *F5* - Move/Drop/Delete a visual 'mark'
+   - *F6* - Open to temporary, changeable commands...
+   - *F7* - Switch to another window ... Control goes the other way.
+   - *F8* - Switch to buffer
+   - *F9* - My extension (replacement?) for =C-c= for changing colors
+     and other odd bindings that I actually don't use that often.
+
+   #+BEGIN_SRC elisp
+     (global-set-key (kbd "<f7>") 'other-window)
+     (global-set-key (kbd "C-<f7>") (lambda () (interactive) (other-window -1)))
+   #+END_SRC
+
+*** F6 Helpers
+
+    The F9 prefix is scattered about my config files.
+
+    #+BEGIN_SRC elisp
+      (define-prefix-command 'personal-global-map)
+      (global-set-key (kbd "<f6>") 'personal-global-map)
+    #+END_SRC
+
+** Undo and Redo
+
+   According to [[http://ergoemacs.org/emacs/emacs_best_redo_mode.html][this article]], I get better functionality than
+   the =redo+= plugin (which I can't seem to get working well).
+
+   #+BEGIN_SRC elisp
+     (use-package undo-tree
+       :ensure t
+       :diminish undo-tree-mode
+       :init
+       (global-undo-tree-mode 1)
+       :config
+       (defalias 'redo 'undo-tree-redo)
+       :bind (("C-z"   . undo)     ; Zap to character isn't helpful
+              ("C-S-z" . redo)))
+   #+END_SRC
+
+** Highlighting and Narrowing
+
+   I like the ability to highlight random text.
+
+   - =M-s h .= :: highlight-symbol-at-point
+   - =M-s h l= :: highlight-lines-matching-regexp
+   - =M-s h p= :: highlight-phrase
+   - =M-s h r= :: highlight-regexp
+   - =M-s h u= :: unhighlight-regexp
+
+   May get specific highlights automatically for certain files. We
+   begin by highlighting lines in *.log files.
+
+   #+BEGIN_SRC elisp
+     (defun gas/highlite-logs ()
+       "Highlight certain lines in specific files.  Currently, only log files are supported."
+       (interactive)
+       (when (equal "log" (file-name-extension (buffer-file-name)))
+             (hi-lock-mode 1)
+             (highlight-lines-matching-regexp "ERROR:" 'hi-red-b)
+             (highlight-lines-matching-regexp "NOTE:" 'hi-blue-b)))
+   #+END_SRC
+
+   The condition in this function that checks for the =log= extension,
+   allows me to hook it to the loading of any file:
+
+   #+BEGIN_SRC elisp :tangle no
+     (add-hook 'find-file-hook 'gas/highlite-logs)
+   #+END_SRC
+
+   Turn on specific word groupings for specific occasions. We begin
+   with highlighting keywords I use during note-taking sessions at
+   the end of a sprint.
+
+   #+BEGIN_SRC elisp
+     (defun gas/sprint-retrospective-highlighting ()
+       "Highlight the good, the bad and the improvements to make when taking notes."
+       (interactive)
+       (hi-lock-mode t)
+       (highlight-lines-matching-regexp "^   [-*] " 'hi-black-b)
+       (highlight-phrase "TODO:?" 'hi-black-b)
+       (highlight-regexp "(?Good)?:?" 'hi-green-b)
+       (highlight-regexp "(?Bad)?:?" 'hi-red-b)
+       (highlight-regexp "Imp\\(rove\\)?:" 'hi-blue-b))
+   #+END_SRC
+
+   This works really well with other commands, including
+   [[https://github.com/Bruce-Connor/fancy-narrow][fancy-narrow]], where I can visually high-light a section of a
+   buffer. Great for code-reviews and other presentations.
+
+   #+BEGIN_SRC elisp
+     (use-package fancy-narrow
+       :ensure t
+       :config
+       (defun gas/highlight-block ()
+         "Highlights a 'block' in a buffer defined by the first blank
+          line before and after the current cursor position. Uses the
+          'fancy-narrow' mode to high-light the block."
+         (interactive)
+         (let (cur beg end)
+           (setq cur (point))
+           (setq end (or (re-search-forward  "^\s*$" nil t) (point-max)))
+           (goto-char cur)
+           (setq beg (or (re-search-backward "^\s*$" nil t) (point-min)))
+           (fancy-narrow-to-region beg end)
+           (goto-char cur)))
+
+       (defun gas/highlight-section (num)
+         "If some of the buffer is highlighted with the `fancy-narrow'
+          mode, then un-highlight it by calling `fancy-widen'.
+
+          If region is active, call `fancy-narrow-to-region'.
+
+          If NUM is 0, highlight the current block (delimited by blank
+          lines). If NUM is positive or negative, highlight that number
+          of lines.  Otherwise, called `fancy-narrow-to-defun', to
+          highlight current function."
+         (interactive "p")
+         (cond
+          ((fancy-narrow-active-p)  (fancy-widen))
+          ((region-active-p)        (fancy-narrow-to-region (region-beginning) (region-end)))
+          ((= num 0)                (gas/highlight-block))
+          ((= num 1)                (fancy-narrow-to-defun))
+          (t                        (progn (gas/expand-region num)
+                                           (fancy-narrow-to-region (region-beginning) (region-end))))))
+
+       :bind ("C-M-+" . gas/highlight-section))
+   #+END_SRC
+
+   This nifty function from [[http://endlessparentheses.com/emacs-narrow-or-widen-dwim.html][Endless Parenthesis]] is a nice replacement
+   for many other narrowing keybindings that I use:
+
+   #+BEGIN_SRC elisp
+     (defun narrow-or-widen-dwim (p)
+       "If the buffer is narrowed, it widens.  Otherwise, it narrows intelligently.
+     Intelligently means: region, subtree, or defun, whichever applies
+     first.
+
+     With prefix P, don't widen, just narrow even if buffer is already
+     narrowed."
+       (interactive "P")
+       (declare (interactive-only))
+       (cond ((and (buffer-narrowed-p) (not p)) (widen))
+             ((region-active-p)
+              (narrow-to-region (region-beginning) (region-end)))
+             ((derived-mode-p 'org-mode) (org-narrow-to-subtree))
+             (t (narrow-to-defun))))
+
+     (global-set-key (kbd "C-x n x") 'narrow-or-widen-dwim)
+   #+END_SRC
+
+** Jumping to Windows
+
+  Set up [[https://github.com/abo-abo/ace-window][ace-window]] mode:
+
+  #+BEGIN_SRC elisp
+    (use-package ace-window
+      :ensure t
+      :init
+        (setq aw-keys '(?a ?s ?d ?f ?j ?k ?l ?o))
+        (global-set-key (kbd "C-x o") 'ace-window)
+      :diminish ace-window-mode)
+  #+END_SRC
+
+** Selecting a Buffer
+
+   I like =IDO= for switching buffers since I typically know what I'm after:
+
+   #+BEGIN_SRC elisp
+    (global-set-key (kbd "<f8>")    'ido-switch-buffer)
+    (global-set-key (kbd "S-<f8>") 'ibuffer)
+   #+END_SRC
+
+** Unfill Paragraph
+
+   Unfilling a paragraph joins all the lines in a paragraph into a
+   single line. Taken from [[http://www.emacswiki.org/UnfillParagraph][here]].
+
+   #+BEGIN_SRC elisp
+     (defun unfill-paragraph ()
+       "Convert a multi-line paragraph into a single line of text."
+       (interactive)
+       (let ((fill-column (point-max)))
+         (fill-paragraph nil)))
+
+     ;; Handy key definition
+     (define-key global-map "\M-Q" 'unfill-paragraph)
+   #+END_SRC
+
+** General Behaviour Fixes
+
+   The subtle changes I've been making to Emacs behaviour has grown
+   until I felt I should move it into [[file:emacs-fixes.org][its own source file]].
+
+   #+BEGIN_SRC elisp :tangle no
+   (require 'init-fixes)
+   #+END_SRC
+
+** Block Wrappers
+
+   While the =M-(= binding to =insert-pair= is great, I often need to
+   wrap with other characters:
+
+   #+BEGIN_SRC elisp
+     (global-set-key (kbd "M-[") 'insert-pair)
+     (global-set-key (kbd "M-{") 'insert-pair)
+     (global-set-key (kbd "M-<") 'insert-pair)
+     (global-set-key (kbd "M-'") 'insert-pair)
+     (global-set-key (kbd "M-`") 'insert-pair)
+     (global-set-key (kbd "M-\"") 'insert-pair)
+   #+END_SRC
+
+   But [[https://github.com/rejeep/wrap-region.el][wrap-region]] is even more flexible. In most editors, selecting
+   text and typing anything replaces the selected text (see the
+   [[info:emacs#Using%20Region][delete-selection-mode]]), but in this case, we can do something
+   different... like wrapping:
+
+   #+BEGIN_SRC elisp
+     (use-package wrap-region
+       :ensure   t
+       :config
+       (wrap-region-global-mode t)
+       (wrap-region-add-wrappers
+        '(("(" ")")
+          ("[" "]")
+          ("{" "}")
+          ("<" ">")
+          ("'" "'")
+          ("\"" "\"")
+          ("‘" "’"   "q")
+          ("“" "”"   "Q")
+          ("*" "*"   "b"   org-mode)                 ; bolden
+          ("*" "*"   "*"   org-mode)                 ; bolden
+          ("/" "/"   "i"   org-mode)                 ; italics
+          ("/" "/"   "/"   org-mode)                 ; italics
+          ("~" "~"   "c"   org-mode)                 ; code
+          ("~" "~"   "~"   org-mode)                 ; code
+          ("=" "="   "v"   org-mode)                 ; verbatim
+          ("=" "="   "="   org-mode)                 ; verbatim
+          ("_" "_"   "u" '(org-mode markdown-mode))  ; underline
+          ("**" "**" "b"   markdown-mode)            ; bolden
+          ("*" "*"   "i"   markdown-mode)            ; italics
+          ("`" "`"   "c" '(markdown-mode ruby-mode)) ; code
+          ("`" "'"   "c"   lisp-mode)                ; code
+          ))
+       :diminish wrap-region-mode)
+   #+END_SRC
+
+   But in order to wrap text in a more general way (with just about
+   any textual string), we need something more. Especially with the
+   =expand-region= command, wrapping a logical block of text with a
+   beginning and ending string really makes sense.
+
+   #+BEGIN_SRC elisp
+     (defun surround (start end txt)
+       "Wrap region with textual markers.
+
+      Without active region (START and END), use the current 'symbol /
+     word' at point instead of TXT.
+
+     Useful for wrapping parens and angle-brackets to also
+     insert the matching closing symbol.
+
+     This function also supports some `org-mode' wrappers:
+
+       - `#s` wraps the region in a source code block
+       - `#e` wraps it in an example block
+       - `#q` wraps it in an quote block"
+       (interactive "r\nsEnter text to surround: " start end txt)
+
+       ;; If the region is not active, we use the 'thing-at-point' function
+       ;; to get a "symbol" (often a variable or a single word in text),
+       ;; and use that as our region.
+
+       (if (not (region-active-p))
+           (let ((new-region (bounds-of-thing-at-point 'symbol)))
+             (setq start (car new-region))
+             (setq end (cdr new-region))))
+
+       ;; We create a table of "odd balls" where the front and the end are
+       ;; not the same string.
+       (let* ((s-table '(("#e" . ("#+BEGIN_EXAMPLE\n" "\n#+END_EXAMPLE") )
+                         ("#s" . ("#+BEGIN_SRC \n"    "\n#+END_SRC") )
+                         ("#q" . ("#+BEGIN_QUOTE\n"   "\n#+END_QUOTE"))
+                         ("<"  . ("<" ">"))
+                         ("("  . ("(" ")"))
+                         ("{"  . ("{" "}"))
+                         ("["  . ("[" "]"))))    ; Why yes, we'll add more
+              (s-pair (assoc-default txt s-table)))
+
+         ;; If txt doesn't match a table entry, then the pair will just be
+         ;; the text for both the front and the back...
+         (unless s-pair
+           (setq s-pair (list txt txt)))
+
+         (save-excursion
+           (narrow-to-region start end)
+           (goto-char (point-min))
+           (insert (car s-pair))
+           (goto-char (point-max))
+           (insert (cadr s-pair))
+           (widen))))
+
+     (global-set-key (kbd "C-+") 'surround)
+   #+END_SRC
+
+   This function returns an interactive lambda expression, suitable
+   for adding to a key-binding:
+
+   #+BEGIN_SRC elisp
+     (defun surround-text-with (surr-str)
+       "Return an interactive function that when called, surrounds region (or word) with string, SURR-STR."
+       (lexical-let ((text surr-str))
+           (lambda ()
+             (interactive)
+             (if (region-active-p)
+                 (surround (region-beginning) (region-end) text)
+               (surround nil nil text)))))
+   #+END_SRC
+
+** SmartParens
+
+ #+BEGIN_SRC elisp
+   (bind-keys
+   :map smartparens-mode-map
+   ("C-M-a" . sp-beginning-of-sexp)
+   ("C-M-e" . sp-end-of-sexp)
+
+   ("C-<down>" . sp-down-sexp)
+   ("C-<up>"   . sp-up-sexp)
+   ("M-<down>" . sp-backward-down-sexp)
+   ("M-<up>"   . sp-backward-up-sexp)
+
+ ("C-M-f" . sp-forward-sexp)
+ ("C-M-b" . sp-backward-sexp)
+
+ ("C-M-n" . sp-next-sexp)
+ ("C-M-p" . sp-previous-sexp)
+
+ ("C-S-f" . sp-forward-symbol)
+ ("C-S-b" . sp-backward-symbol)
+
+ ("C-<right>" . sp-forward-slurp-sexp)
+ ("M-<right>" . sp-forward-barf-sexp)
+ ("C-<left>"  . sp-backward-slurp-sexp)
+ ("M-<left>"  . sp-backward-barf-sexp)
+
+ ("C-M-t" . sp-transpose-sexp)
+ ("C-M-k" . sp-kill-sexp)
+ ("C-k"   . sp-kill-hybrid-sexp)
+ ("M-k"   . sp-backward-kill-sexp)
+ ("C-M-w" . sp-copy-sexp)
+ ("C-M-d" . delete-sexp)
+
+ ("M-<backspace>" . backward-kill-word)
+ ("C-<backspace>" . sp-backward-kill-word)
+ ([remap sp-backward-kill-word] . backward-kill-word)
+
+ ("M-[" . sp-backward-unwrap-sexp)
+ ("M-]" . sp-unwrap-sexp)
+
+ ("C-x C-t" . sp-transpose-hybrid-sexp)
+
+ ("C-c ("  . wrap-with-parens)
+ ("C-c ["  . wrap-with-brackets)
+ ("C-c {"  . wrap-with-braces)
+ ("C-c '"  . wrap-with-single-quotes)
+ ("C-c \"" . wrap-with-double-quotes)
+ ("C-c _"  . wrap-with-underscores)
+ ("C-c `"  . wrap-with-back-quotes))
+#+END_SRC
+** General keybindings
+#+BEGIN_SRC elisp
+  (bind-keys
+   :map global-map
+   ("C-c d"   . insert-date)
+   ("C-c C-d" . insert-date-and-time)
+   ("C-M-y" . yank-primary))
+#+END_SRC
+* F2
+The *F2* is used to enter odd characters not normally available or
+phrases I want to type a bit too often.
+
+    #+BEGIN_SRC elisp
+      (define-prefix-command 'f2-global-map)
+      (global-set-key (kbd "<f2>") 'f2-global-map)
+    #+END_SRC
+
+
+* Unicode Characters
+
+  Some of my frequently used Unicode characters:
+
+#+BEGIN_SRC elisp
+  (define-key f2-global-map (kbd "<up>") "↑")
+  (define-key f2-global-map (kbd "<down>") "↓")
+  (define-key f2-global-map (kbd "<left>") "←")
+  (define-key f2-global-map (kbd "<right>") "→")
+  (define-key f2-global-map (kbd "S-<up>") "⇑")
+  (define-key f2-global-map (kbd "S-<down>") "⇓")
+  (define-key f2-global-map (kbd "S-<left>") "⇐")
+  (define-key f2-global-map (kbd "S-<right>") "⇒")
+
+  (define-key f2-global-map (kbd "p") "▯")   ;; Representation of a cursor
+
+  (define-key f2-global-map (kbd "'") "’")
+  (define-key f2-global-map (kbd "\"") "‘")
+
+  (define-key f2-global-map (kbd "8") "•")
+  (define-key f2-global-map (kbd "*") "°")
+  (define-key f2-global-map (kbd "d") "†")
+  (define-key f2-global-map (kbd "D") "‡")
+  (define-key f2-global-map (kbd "-") "—")
+  (define-key f2-global-map (kbd ".") "…")
+  (define-key f2-global-map (kbd ";") "😉")
+  (define-key f2-global-map (kbd ")") "☺")
+
+  (define-key f2-global-map (kbd "A") "α")   ;; Lowercase Greek is uppercase
+  (define-key f2-global-map (kbd "B") "β")
+  (define-key f2-global-map (kbd "E") "ε")
+  (define-key f2-global-map (kbd "L") "λ")
+  (define-key f2-global-map (kbd "P") "π")
+  (define-key f2-global-map (kbd "M") "μ")
+  (define-key f2-global-map (kbd "T") "θ")
+#+END_SRC
+
+  Most key-bindings accept a string that will be inserted, but some
+  strings (notably those with Unicode symbols that refer to numbers),
+  actually become a prefix, so a little closure should do the trick:
+
+  #+BEGIN_SRC elisp
+  (require 'cl)
+
+  (defun ha/insert (ch)
+    (lexical-let ((chr ch))
+       (lambda () (interactive) (insert chr))))
+  #+END_SRC
+
+  Key-bindings for special numeric symbols:
+
+  #+BEGIN_SRC elisp
+  (define-key f2-global-map (kbd "!") (ha/insert "¹"))
+  (define-key f2-global-map (kbd "@") (ha/insert "²"))
+  (define-key f2-global-map (kbd "#") (ha/insert "³"))
+  (define-key f2-global-map (kbd "$") (ha/insert "⁴"))
+
+  (define-key f2-global-map (kbd "2") (ha/insert "½"))
+  (define-key f2-global-map (kbd "3") (ha/insert "⅓"))
+  (define-key f2-global-map (kbd "4") (ha/insert "¼"))
+  #+END_SRC
+
+* Italic and Bold Letters
+
+  For mathematical and other equations, I like to be able to enter
+  bold and italic letters, but instead of a series of calls and the
+  matching glyph, I can create a function that uses the =lexical-let=
+  to return a lambda expression suitable for passing on to =mapcar*=:
+
+  #+BEGIN_SRC elisp
+    (defun ha/letter-mapping (key-prefix)
+      (lexical-let ((keyprefix key-prefix))
+        (lambda (chr glyph)
+          (define-key f2-global-map
+            (kbd (concat keyprefix (string chr))) (string glyph)))))
+  #+END_SRC
+
+  The mathematical italic Capital A in Unicode is U+1D434 and Z is U+1D44D.
+  A sequence mapping the letters ‘A’ to ‘Z’ are /zipped/ together:
+
+  #+BEGIN_SRC elisp
+  (mapcar* (ha/letter-mapping "M-")
+           (number-sequence 65 90)
+           (number-sequence #x01D434 #x01D44D))
+  #+END_SRC
+
+  So 𝐴 is entered with a =F2 M-A=
+
+  Do the same thing with the lower case letters, were
+  Lowercase italic a is U+1D44E and z is U+1D467:
+
+  #+BEGIN_SRC elisp
+  (mapcar* (ha/letter-mapping "M-")
+           (number-sequence 97 122)
+           (number-sequence #x01D44E #x01D467))
+  #+END_SRC
+
+  We’ll bind both the Meta and Control keys for the bold and italic expressions.
+  Where capital bold A is U+1D468, and lower bold a is U+1D482:
+
+  #+BEGIN_SRC elisp
+  (mapcar* (ha/letter-mapping "C-M-")
+           (number-sequence 65 90)
+           (number-sequence #x01D468 #x01D481))
+
+  (mapcar* (ha/letter-mapping "C-M-")
+           (number-sequence 97 122)
+           (number-sequence #x01D482 #x01D49B))
+  #+END_SRC
+
+* Math Symbols
+
+  I really don’t type that much math, but in trying to translate some
+  mathematically-minded papers, I realize that I could use a few:
+
+  #+BEGIN_SRC elisp
+  (define-key f2-global-map (kbd "=") "≡")
+  (define-key f2-global-map (kbd ":") "≔")
+  (define-key f2-global-map (kbd "~") "≝")
+  #+END_SRC
+
+  Most math, however, should be based on the meta prefix:
+
+  #+BEGIN_SRC elisp
+  (define-key f2-global-map (kbd "M-.") "∴")  ; Therefore
+  (define-key f2-global-map (kbd "M-,") "∵")  ; Therefore
+  (define-key f2-global-map (kbd "M-t") "⊢")  ; Turnstile ... to assert
+  (define-key f2-global-map (kbd "M-T") "≜")  ; Should be a triangle over equal sign
+  (define-key f2-global-map (kbd "M-n") "∅")  ; Empty Set
+  (define-key f2-global-map (kbd "M-e") "∃")  ; There exists
+  (define-key f2-global-map (kbd "M-E") "∄")  ; There does not exist
+  (define-key f2-global-map (kbd "M-i") "∩")  ; Intersection
+  (define-key f2-global-map (kbd "M-u") "∪")  ; Union
+  (define-key f2-global-map (kbd "M-6") "⋀")  ; Conjunction
+  (define-key f2-global-map (kbd "M-^") "⋁")  ; Disjunction
+  (define-key f2-global-map (kbd "M-*") "✕")  ; Multiply
+  (define-key f2-global-map (kbd "M-/") "÷")  ; Divide
+  (define-key f2-global-map (kbd "M-!") "¬")  ; Logical Not
+  #+END_SRC
+
+* Favourite Phrases
+
+  What do I really need to enter that often that auto-completion
+  doesn’t immediately solve?
+
+  #+BEGIN_SRC elisp
+    (define-key f2-global-map (kbd "G") "Andrés Gasson")
+  #+END_SRC
+
+* Technical Artifacts
+
+  Make sure that we can simply =require= this library.
+
+#+BEGIN_SRC elisp
+  (provide 'init-keybindings)
+#+END_SRC
+
+  Before you can build this on a new system, make sure that you put
+  the cursor over any of these properties, and hit: =C-c C-c=
+
+#+DESCRIPTION: A literate programming version of my Emacs Initialisation for Graphical Clients
+#+PROPERTY:    results silent
+#+PROPERTY:    header-args:sh  :tangle no
+#+PROPERTY:    tangle ~/.emacs.d/elisp/init-keybindings.el
+#+PROPERTY:    eval no-export
+#+PROPERTY:    comments org
+#+OPTIONS:     num:nil toc:nil todo:nil tasks:nil tags:nil
+#+OPTIONS:     skip:nil author:nil email:nil creator:nil timestamp:nil
+#+INFOJS_OPT:  view:nil toc:nil ltoc:t mouse:underline buttons:0 path:http://orgmode.org/org-info.js

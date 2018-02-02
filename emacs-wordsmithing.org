@@ -1,0 +1,420 @@
+#+TITLE:  Word Smithing Files
+#+AUTHOR: Andrés Gasson
+#+EMAIL:  agasson@red-elvis.net
+#+DATE:   2017 Nov 09
+#+TAGS:   emacs
+
+This literate programming file tangles out the configuration for
+word smithing features of my emacs config.
+
+* Word Smithing
+** Auto Insertion
+
+   Just beginning to get a collection of templates to automatically
+   insert if a blank file is loaded.
+
+   #+BEGIN_SRC elisp
+     (use-package autoinsert
+       :init
+       (setq auto-insert-directory (gas/emacs-subdirectory "templates/"))
+       ;; Don't want to be prompted before insertion:
+       (setq auto-insert-query nil)
+
+       (add-hook 'find-file-hook 'auto-insert)
+       (auto-insert-mode 1))
+   #+END_SRC
+
+   Add a =:config= section to configure static insertion, and add:
+
+   #+BEGIN_SRC elisp :tangle no
+     (define-auto-insert "\\.html?$" "default-html.html")
+   #+END_SRC
+
+   However, auto insertion requires entering data for particular fields,
+   and for that Yasnippet is better, so in this case, we combine them:
+
+   #+BEGIN_SRC elisp
+     (defun gas/autoinsert-yas-expand()
+       "Replace text in yasnippet template."
+       (yas-expand-snippet (buffer-string) (point-min) (point-max)))
+   #+END_SRC
+
+   Now bind many of the templates for auto-insert and field expansion:
+
+   #+BEGIN_SRC elisp
+     (use-package autoinsert
+       :config
+       (define-auto-insert "\\.el$" ["default-lisp.el" gas/autoinsert-yas-expand])
+       (define-auto-insert "\\.sh$" ["default-sh.sh" gas/autoinsert-yas-expand])
+       (define-auto-insert "/bin/"  ["default-sh.sh" gas/autoinsert-yas-expand])
+       (define-auto-insert "\\.html?$" ["default-html.html" gas/autoinsert-yas-expand]))
+   #+END_SRC
+
+** Auto Complete
+
+   Using [[http://company-mode.github.io/][company-mode]] for all my auto completion needs.
+
+   Like [[https://github.com/vspinu/company-math][this idea]] of being able to easily insert math
+   symbols based on LaTeX keywords. Start typing a backslash.
+
+   #+BEGIN_SRC elisp
+     (use-package company
+       :ensure t
+       :init
+       (setq company-dabbrev-ignore-case t
+             company-show-numbers t)
+       (add-hook 'after-init-hook 'global-company-mode)
+       :config
+       (add-to-list 'company-backends 'company-math-symbols-unicode)
+       :bind ("C-:" . company-complete)  ; In case I don't want to wait
+       :diminish company-mode)
+   #+END_SRC
+
+   Take advantage of idle time by displaying some documentation
+   using [[https://www.github.com/expez/company-quickhelp][company-quickhelp]] project.
+
+   #+BEGIN_SRC elisp
+     (use-package company-quickhelp
+       :ensure t
+       :config
+       (company-quickhelp-mode 1))
+   #+END_SRC
+
+   This also requires [[https://github.com/pitkali/pos-tip/blob/master/pos-tip.el][pos-tip]].
+
+** Yasnippets
+
+   The [[https://github.com/capitaomorte/yasnippet][yasnippet project]] allows me to create snippets of code that
+   can be brought into a file, based on the language.
+
+   #+BEGIN_SRC elisp
+     (use-package yasnippet
+       :ensure t
+       :diminish  "γ"
+       :init
+       (yas-global-mode 1)
+       :config
+       (add-to-list 'yas-snippet-dirs (gas/emacs-subdirectory "snippets")))
+   #+END_SRC
+
+   *Note:*: the =snippets= directory contains directories for each
+   mode, e.g.  =clojure-mode= and =org-mode=.
+
+** Spell Checking
+
+   I like spell checking with [[http://www.emacswiki.org/emacs/FlySpell][FlySpell]], which uses the built-in
+   spell-check settings of [[https://www.gnu.org/software/ispell/][ispell]].
+
+   Start for all text modes (but not for log files):
+
+   #+BEGIN_SRC elisp
+     (use-package flyspell
+       :ensure t
+       :diminish flyspell-mode
+       :init
+       (add-hook 'prog-mode-hook 'flyspell-prog-mode)
+
+       (dolist (hook '(text-mode-hook org-mode-hook))
+         (add-hook hook (lambda () (flyspell-mode 1))))
+
+       (dolist (hook '(change-log-mode-hook log-edit-mode-hook org-agenda-mode-hook))
+         (add-hook hook (lambda () (flyspell-mode -1))))
+
+       :config
+       (setq ispell-program-name "/usr/local/bin/aspell"
+             ispell-dictionary "british" ; better for aspell
+             ispell-extra-args '("--sug-mode=ultra" "--lang=en_NZ")
+             ispell-list-command "--list")
+
+       (add-to-list 'ispell-local-dictionary-alist '(nil
+                                                     "[[:alpha:]]"
+                                                     "[^[:alpha:]]"
+                                                     "['‘’]"
+                                                     t
+                                                     ("-d" "en_NZ")
+                                                     nil
+                                                     utf-8)))
+   #+END_SRC
+
+   ASpell automatically configures a personal dictionary
+   at =~/.aspell.en.pws=, so no need to configure that.
+
+   According to [[http://pragmaticemacs.com/emacs/jump-back-to-previous-typo/][this essay]], we can make a =flyspell-goto-previous-error=
+   (which really should be added to the official =flyspell= project):
+
+   #+BEGIN_SRC elisp
+     (defun flyspell-goto-previous-error (arg)
+       "Go to ARG previous spelling error."
+       (interactive "p")
+       (while (not (= 0 arg))
+         (let ((pos (point))
+               (min (point-min)))
+           (when (and (eq (current-buffer) flyspell-old-buffer-error)
+                      (eq pos flyspell-old-pos-error))
+             (if (= flyspell-old-pos-error min)
+                 ;; goto beginning of buffer
+                 (progn
+                   (message "Restarting from end of buffer")
+                   (goto-char (point-max)))
+               (backward-word 1))
+             (setq pos (point)))
+
+           ;; seek the next error
+           (while (and (> pos min)
+                       (let ((ovs (overlays-at pos))
+                             (r '()))
+                         (while (and (not r) (consp ovs))
+                           (if (flyspell-overlay-p (car ovs))
+                               (setq r t)
+                             (setq ovs (cdr ovs))))
+                         (not r)))
+             (backward-word 1)
+             (setq pos (point)))
+           ;; save the current location for next invocation
+           (setq arg (1- arg))
+           (setq flyspell-old-pos-error pos)
+           (setq flyspell-old-buffer-error (current-buffer))
+           (goto-char pos)
+           (if (= pos min)
+               (progn
+                 (message "No more miss-spelled words!")
+                 (setq arg 0))))))
+   #+END_SRC
+
+** Spell Correction with Abbreviation Mode
+
+   According to [[http://endlessparentheses.com/ispell-and-abbrev-the-perfect-auto-correct.html][this discussion]], we can correct a misspelled word with
+   ~Super-;~ (similar to ~C-;~), but it will use the abbreviation mode to
+   automatically correct that word...as long as you misspell it the
+   same way each time.
+
+   #+BEGIN_SRC elisp
+     (defun gas/ispell-word-then-abbrev (p)
+       "Call `ispell-word'.  After create an abbrev for the correction made.
+     With prefix P, create local abbrev.  Otherwise it will be
+     global."
+       (interactive "P")
+       (flyspell-goto-previous-error 1)
+       (let ((bef (downcase (or (thing-at-point 'word) ""))) aft)
+         (call-interactively 'ispell-word)
+         (setq aft (downcase (or (thing-at-point 'word) "")))
+         (unless (string= aft bef)
+           (define-abbrev
+             (if p global-abbrev-table local-abbrev-table)
+             bef aft)
+           (abbrev-edit-save-to-file abbrev-file-name)
+           (message "\"%s\" now expands to \"%s\" %s"
+                    bef aft (if p "locally" "globally")))))
+   #+END_SRC
+
+   Need to turn on the mode, but not necessarily show it:
+
+   #+BEGIN_SRC elisp
+     (use-package abbrev
+       :bind ("C-c T a" . abbrev-mode)
+             ("A-;" . gas/ispell-word-then-abbrev)
+       :init (setq save-abbrevs t)
+             (setq-default abbrev-mode t)
+       :diminish abbrev-mode)
+   #+END_SRC
+
+* Miscellaneous Settings
+
+** Line Numbers
+
+   Turn =linum-mode= on/off with =Command-K= (see the [[*Macintosh][Macintosh]]
+   section above).  However, I turn this on automatically for
+   programming modes.
+
+   #+BEGIN_SRC elisp
+     (use-package linum
+       :init
+       (add-hook 'prog-mode-hook 'linum-mode)
+       (add-hook 'linum-mode-hook (lambda () (set-face-attribute 'linum nil :height 110)))
+
+       :config
+       (defun linum-fringe-toggle ()
+         "Toggles the line numbers as well as the fringe."    (interactive)
+         (cond (linum-mode (fringe-mode '(0 . 0))
+                           (linum-mode -1))
+               (t          (fringe-mode '(8 . 0))
+                           (linum-mode 1))))
+
+       :bind (("A-C-k"   . linum-mode)
+              ("s-C-k"   . linum-mode)
+              ("A-C-M-k" . linum-fringe-toggle)
+              ("s-C-M-k" . linum-fringe-toggle)))
+   #+END_SRC
+
+   *Note:* make the line numbers a fixed size, then increasing or
+   decreasing the font size doesn't truncate the numbers.
+
+   The [[https://github.com/coldnew/linum-relative][linum-relative]] mode allows one to see the /destination/ line as a
+   relative distance (like one 9 lines lower), and then =C-9 C-n= can
+   quickly pop to it.
+
+   #+BEGIN_SRC elisp
+     (use-package linum-relative
+       :ensure t
+       :config
+       (defun linum-new-mode ()
+         "If line numbers aren't displayed, then display them.
+          Otherwise, toggle between absolute and relative numbers."
+         (interactive)
+         (if linum-mode
+             (linum-relative-toggle)
+           (linum-mode 1)))
+
+       :bind ("A-k" . linum-new-mode)
+             ("s-k" . linum-new-mode))   ;; For Linux
+   #+END_SRC
+
+** Smart Comments
+
+   The [[https://github.com/paldepind/smart-comment][smart-comment]] project has the nice feature of commenting a line
+   without being at the beginning of the line (default comment in the
+   middle of the line is to split it).
+
+   #+BEGIN_SRC elisp
+     (use-package smart-comment
+       :bind ("M-;" . smart-comment))
+   #+END_SRC
+
+   Also has the ability (with the =C-u= prefix) to mark comments as
+   things to be deleted.
+
+** Smart Scan
+
+   Use the =M-n= to search the buffer for the word the cursor is
+   currently pointing. =M-p= to go backwards. See [[http://www.masteringemacs.org/articles/2011/01/14/effective-editing-movement/][this essay]] for
+   details.
+
+   #+BEGIN_SRC elisp :tangle no
+     (use-package smartscan
+       :ensure t
+       :bind ("M-n" . smartscan-symbol-go-forward)
+             ("M-p" . smartscan-symbol-go-backward))
+   #+END_SRC
+
+** Strip Whitespace on Save
+
+   When I save, I want to always, and I do mean always strip all
+   trailing whitespace from the file.
+
+   #+BEGIN_SRC elisp
+     (add-hook 'before-save-hook 'delete-trailing-whitespace)
+   #+END_SRC
+
+** Save File Position
+
+   Save the point position for every file, and restore it when that
+   file is reloaded.
+
+   #+BEGIN_SRC elisp
+     (use-package saveplace
+        :init
+        (setq-default save-place t)
+        (setq save-place-forget-unreadable-files t
+              save-place-skip-check-regexp "\\`/\\(?:cdrom\\|floppy\\|mnt\\|/[0-9]\\|\\(?:[^@/:]*@\\)?[^@/:]*[^@/:.]:\\)"))
+   #+END_SRC
+
+** Better Searching and Visual Regular Expressions
+
+   Searching is quite good in Emacs. Let's add a few extra keys:
+
+   #+BEGIN_SRC elisp
+     (bind-keys :map isearch-mode-map
+                ("<left>"  . isearch-repeat-backward)
+                ("<right>" . isearch-repeat-forward)
+                ("<up>"    . isearch-ring-retreat)
+                ("<down>"  . isearch-ring-advance))
+   #+END_SRC
+
+   Easier replacement of my [[http://www.masteringemacs.org/articles/2011/01/14/effective-editing-movement/][Smart Scan]] for searching forward/backward
+   for the current word. This is now bound to =M-s .= (in Emacs 24.4),
+   but I then have to hit =C-s= or =C-r= ... nicer to use the period/comma.
+
+   The [[https://github.com/benma/visual-regexp.el][Visual Regular Expressions]] project highlights the matches
+   while you try to remember the differences between Perl's regular
+   expressions and Emacs'...
+
+   Begin with =C-c r= then type the regexp. To see the highlighted
+   matches, type =C-c a= before you hit 'Return' to accept it.
+
+   #+BEGIN_SRC elisp
+     (use-package visual-regexp
+       :ensure t
+       :init
+       (use-package visual-regexp-steroids :ensure t)
+
+       :bind (("C-c r" . vr/replace)
+              ("C-c q" . vr/query-replace))
+
+       ;; if you use multiple-cursors, this is for you:
+       :config (use-package  multiple-cursors
+                 :bind ("C-c m" . vr/mc-mark)))
+   #+END_SRC
+
+** Flycheck
+
+   [[https://github.com/flycheck/flycheck][Flycheck]] seems to be quite superior to good ol' Flymake.
+
+   #+BEGIN_SRC elisp
+     (use-package flycheck
+       :ensure t
+       :init
+       (add-hook 'after-init-hook 'global-flycheck-mode)
+       :config
+       (setq-default flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
+   #+END_SRC
+
+** Hungry Delete
+
+   The Hungry Delete project is a [[http://endlessparentheses.com//hungry-delete-mode.html][free feature]], where deleting any
+   space, deletes ALL spaces.
+
+   This is already built into Emacs with the following:
+   - =M-\= :: Removes all spaces
+   - =M-SPC= :: Removes extra spaces, leaving just one
+   - =M-^= :: Joins current line with previous line (doesn't matter
+        where the point is on the line)
+   - =M-- M-1 M-SPC= :: Joins next line to this one (if point at end
+        of line) separated by a space ... quite the chording, eh?
+
+** Table and Column Alignment
+
+   While I shouldn't, I like to line up comma-separated columns (and
+   colon-delimited hashes), and since I can never type the regular
+   expression on the first time, I wrapped it up in a callable
+   function.
+
+   #+BEGIN_SRC elisp
+     (defun align-comma (start end c)
+       "Repeat alignment with a character padded with spaces for
+     comma-separated columns."
+       (interactive "r\nsAlign character: ")
+       (align-regexp start end
+                     (concat c "\\(\\s-*\\)") 1 1 t))
+   #+END_SRC
+
+
+
+* Technical Artifacts
+
+  Make sure that we can simply =require= this library.
+
+#+BEGIN_SRC elisp
+  (provide 'init-wordsmithing)
+#+END_SRC
+
+  Before you can build this on a new system, make sure that you put
+  the cursor over any of these properties, and hit: =C-c C-c=
+
+#+PROPERTY:    tangle ~/.emacs.d/elisp/init-wordsmithing.el
+#+DESCRIPTION: A literate programming version of my Emacs Word Smithing Initialisation
+#+PROPERTY:    results silent
+#+PROPERTY:    eval no-export
+#+PROPERTY:    comments org
+#+OPTIONS:     num:nil toc:nil todo:nil tasks:nil tags:nil
+#+OPTIONS:     skip:nil author:nil email:nil creator:nil timestamp:nil
+#+INFOJS_OPT:  view:nil toc:nil ltoc:t mouse:underline buttons:0 path:http://orgmode.org/org-info.js

@@ -1,0 +1,234 @@
+                        -*- Mode: org; fill-column: 78 -*-
+#+TITLE:  Emacs Display
+#+AUTHOR: Andrew Gasson
+#+EMAIL:  agasson@red-elvis.net
+#+DATE:   2017 Nov 09
+#+TAGS:   emacs
+
+This literate programming file tangles out the configuration for
+display features of my emacs config.
+
+* Display Settings
+
+  Remove surpfulous fluff from display.
+
+  #+BEGIN_SRC elisp
+    (setq initial-scratch-message "") ;; Uh, I know what Scratch is for
+    (setq visible-bell t)             ;; Get rid of the beeps
+
+    (when (window-system)
+      (tool-bar-mode 0)               ;; Toolbars were only cool with XEmacs
+      (when (fboundp 'horizontal-scroll-bar-mode)
+        (horizontal-scroll-bar-mode -1))
+      (scroll-bar-mode -1))            ;; Scrollbars just waste screen estate
+
+  ;; UTF-8 as default encoding
+  (set-language-environment "UTF-8")
+
+  ;; Set the default comment column to 70
+  (setq-default comment-column 70)
+
+  ;; Every time a window is started, make sure it get maximized
+  ;; (add-to-list 'default-frame-alist '(fullscreen . maximized))
+  #+END_SRC
+
+** Fonts
+  There is a new wonderful coding font that I discovered recently called the Input (Font for Code).
+  This is a really neat font that works particularly well. You just have to go to their site,
+  define the characteristics you want for it, download and install it locally.
+  #+BEGIN_SRC elisp
+  ;;Use the Input Sans font size 12
+  (set-default-font "Input Sans Condensed-12")
+  #+END_SRC
+
+  And the best coloured highlighting of selected text needs to be both
+  bright, but not obscure the white text in the foreground (see
+  =list-colors-display=). Favorites so far are =purple4= and =DarkOrange3=:
+
+  #+BEGIN_SRC elisp
+    (set-face-background 'region "DarkOrange3")
+  #+END_SRC
+
+** Mode-line
+  My mode line has become quite complicated, so I've pulled it out
+  into its own file:
+
+  #+BEGIN_SRC elisp
+;;; Greek letters - C-u C-\ greek ;; C-\ to revert to default
+;;; ς ε ρ τ υ θ ι ο π α σ δ φ γ η ξ κ λ ζ χ ψ ω β ν μ
+
+    (require 'init-mode-line)
+  #+END_SRC
+
+  Most of the display settings actually come from the [[file:emacs-mac.org][Mac initialisation file]].
+
+** Theme
+  Set monokai theme & font size
+
+#+BEGIN_SRC elisp
+  ;;(add-to-list 'custom-theme-load-path "~/.emacs.d/elpa/monokai-theme-3.4.0/")
+  (use-package monokai-theme
+  :ensure t
+ ; :disabled t
+  :config
+  (load-theme 'monokai 'no-confirm))
+;;(load-theme 'monokai t)
+
+  ;;
+  ;; Update the colour of the company-mode context menu to fit the Monokai theme
+  ;; @source: https://github.com/search?q=deftheme+company-tooltip&type=Code
+  ;;
+  (deftheme monokai-overrides)
+
+  (let ((class '((class color) (min-colors 257)))
+      (terminal-class '((class color) (min-colors 89))))
+
+  (custom-theme-set-faces
+   'monokai-overrides
+
+   ;; Linum and mode-line improvements (only in sRGB).
+   `(linum
+     ((,class :foreground "#75715E"
+              :background "#49483E")))
+   `(mode-line-inactive
+     ((,class (:box (:line-width 1 :color "#2c2d26" :style nil)
+                    :background "#2c2d26"))))
+
+   ;; Custom region colouring.
+   `(region
+     ((,class :foreground "#75715E"
+              :background "#49483E")
+      (,terminal-class :foreground "#1B1E1C"
+                       :background "#8B8878")))
+
+   ;; Additional modes
+   ;; Company tweaks.
+   `(company-tooltip-common
+     ((t :foreground "#F8F8F0"
+         :background "#474747"
+         :underline t)))
+
+   `(company-template-field
+     ((t :inherit company-tooltip
+         :foreground "#C2A1FF")))
+
+   `(company-tooltip-selection
+     ((t :background "#349B8D"
+         :foreground "#BBF7EF")))
+
+   `(company-tooltip-common-selection
+     ((t :foreground "#F8F8F0"
+         :background "#474747"
+         :underline t)))
+
+   `(company-scrollbar-fg
+     ((t :background "#BBF7EF")))
+
+   `(company-tooltip-annotation
+     ((t :inherit company-tooltip
+         :foreground "#C2A1FF")))
+
+   ;; Popup menu tweaks.
+   `(popup-menu-face
+     ((t :foreground "#A1EFE4"
+         :background "#49483E")))
+
+   `(popup-menu-selection-face
+     ((t :background "#349B8D"
+         :foreground "#BBF7EF")))
+
+   ;; Circe
+   `(circe-prompt-face
+     ((t (:foreground "#C2A1FF" :weight bold))))
+
+   `(circe-server-face
+     ((t (:foreground "#75715E"))))
+
+   `(circe-highlight-nick-face
+     ((t (:foreground "#AE81FF" :weight bold))))
+
+   `(circe-my-message-face
+     ((t (:foreground "#E6DB74"))))
+
+   `(circe-originator-face
+     ((t (:weight bold))))))
+#+END_SRC
+
+
+** LineNumbers
+#+BEGIN_SRC elisp
+   (setq linum-format "%4d")
+
+   (defun my-linum-mode-hook ()
+     (linum-mode t))
+
+    (add-hook 'find-file-hook 'my-linum-mode-hook)
+#+END_SRC
+** Timestamps
+#+BEGIN_SRC elisp
+(defun format-date (format)
+  (let ((system-time-locale "en_NZ.UTF-8"))
+    (insert (format-time-string format))))
+
+(defun insert-date ()
+  (interactive)
+  (format-date "%A, %B %d %Y"))
+
+(defun insert-date-and-time ()
+  (interactive)
+  (format-date "%Y-%m-%d %H:%M:%S"))
+#+END_SRC
+
+** Whitespace Mode
+
+   You don't want this on all the time, but nice to turn it on every
+   now and then:
+
+   #+BEGIN_SRC elisp
+     (use-package whitespace
+       :bind ("C-c T w" . whitespace-mode)
+       :init
+       (setq whitespace-line-column nil
+             whitespace-display-mappings '((space-mark 32 [183] [46])
+                                           (newline-mark 10 [9166 10])
+                                           (tab-mark 9 [9654 9] [92 9])))
+       :config
+       (set-face-attribute 'whitespace-space       nil :foreground "#666666" :background nil)
+       (set-face-attribute 'whitespace-newline     nil :foreground "#666666" :background nil)
+       (set-face-attribute 'whitespace-indentation nil :foreground "#666666" :background nil)
+       :delight " 🗒️")
+   #+END_SRC
+
+** Fill Mode
+
+   Automatically wrapping when you get to the end of a line (or the
+   fill-region):
+
+   #+BEGIN_SRC elisp
+     (use-package fill
+       :bind (("C-c T f" . auto-fill-mode)
+              ("C-c T t" . toggle-truncate-lines))
+       :init (add-hook 'org-mode-hook 'turn-on-auto-fill)
+       :diminish auto-fill-mode)
+   #+END_SRC
+
+
+* Technical Artifacts
+
+  Make sure that we can simply =require= this library.
+
+#+BEGIN_SRC elisp
+  (provide 'init-display)
+#+END_SRC
+
+  Before you can build this on a new system, make sure that you put
+  the cursor over any of these properties, and hit: =C-c C-c=
+
+#+PROPERTY:    tangle ~/.emacs.d/elisp/init-display.el
+#+DESCRIPTION: A literate programming version of my Emacs Display Initialisation
+#+PROPERTY:    results silent
+#+PROPERTY:    eval no-export
+#+PROPERTY:    comments org
+#+OPTIONS:     num:nil toc:nil todo:nil tasks:nil tags:nil
+#+OPTIONS:     skip:nil author:nil email:nil creator:nil timestamp:nil
+#+INFOJS_OPT:  view:nil toc:nil ltoc:t mouse:underline buttons:0 path:http://orgmode.org/org-info.js

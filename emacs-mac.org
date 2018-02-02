@@ -1,4 +1,4 @@
-#+TITLE:  Macintosh Configuration for Emacs
+#+TITLE:  Mac Configuration for Emacs
 #+AUTHOR: Andrés Gasson
 #+EMAIL:  agasson@red-elvis.net
 #+DATE:   2016 Oct 10
@@ -14,14 +14,24 @@ then, only during a graphical run.
   the exec-path-from-shell package:
 
   #+BEGIN_SRC elisp
+    ;; Keybonds
+    (global-set-key [(hyper a)] 'mark-whole-buffer)
+    (global-set-key [(hyper v)] 'yank)
+    (global-set-key [(hyper c)] 'kill-ring-save)
+    (global-set-key [(hyper s)] 'save-buffer)
+    (global-set-key [(hyper l)] 'goto-line)
+    (global-set-key [(hyper w)]
+                   (lambda () (interactive) (delete-window)))
+    (global-set-key [(hyper z)] 'undo)
+
     (setq mac-option-modifier 'meta)
-    (setq mac-command-modifier 'super)
+    (setq mac-command-modifier 'hyper)
 
     (use-package exec-path-from-shell
-      :ensure t)
+         :ensure t)
 
-   (when (memq window-system '(mac ns))
-    (exec-path-from-shell-initialize))
+    (when (memq window-system '(mac ns))
+       (exec-path-from-shell-initialize))
   #+END_SRC
 
   Once upon a time, I thought I would get confused and hit a

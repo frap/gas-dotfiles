@@ -1,7 +1,7 @@
 #+TITLE:  Emacs Settings for Clojure
 #+AUTHOR: Andrés Gasson
 #+EMAIL:  agasson@red-elvis.net
-#+DATE:   [2016-08-26 Fri]
+#+DATE:   [2017-09-11 Mon]
 #+TAGS:   emacs clojure
 
 I like [[http://clojure.org][Clojure]], and since it is a LISP, then [[https://github.com/clojure-emacs][Emacs likes it]] too.
@@ -23,15 +23,16 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
 
 ** Regarding Leiningen
 
-  To keep from having to add the same information to /every/
-  =project.clj= file, place the following in =~/.lein/profiles.clj=:
+  As of cider >+ 0.11 cider-jack-in takes care of injecting its own
+  dependencies. these profiles are only needed for when using
+  cider-connect place the following in =~/.lein/profiles.clj=:
 
-  #+BEGIN_SRC clojure :tangle no
-  {:repl {:plugins [[cider/cider-nrepl "0.14.0"]
-                    [jonase/eastwood "0.2.3"]
+  #+BEGIN_SRC clojure
+  {:repl {:plugins [[cider/cider-nrepl "0.15.0"]
+                   [ jonase/eastwood "0.2.3"]
                     [refactor-nrepl "2.2.0"]
                     [lein-cljfmt "0.5.5"]]
-          :dependencies [[org.clojure/clojure "1.9.0-alpha14"]
+          :dependencies [[org.clojure/clojure "1.8.0"]
                          [acyclic/squiggly-clojure "0.1.6"]
                          [org.clojure/tools.nrepl "0.2.12"]]}}
   #+END_SRC
@@ -49,8 +50,8 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
   (require 'boot.repl)
   (swap! @(resolve 'boot.repl/*default-dependencies*)
          concat '[[org.clojure/tools.nrepl "0.2.12"]
-                  [cider/cider-nrepl "0.14.0"]
-                  [refactor-nrepl "2.2.0"]])
+                  [cider/cider-nrepl "0.15.0"]
+                  [refactor-nrepl "2.3.1"]])
   (swap! @(resolve 'boot.repl/*default-middleware*)
          concat '[cider.nrepl/cider-middleware
                   refactor-nrepl.middleware/wrap-refactor])
@@ -73,13 +74,13 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
 
   Each of these packages will be configured below.
 
-* Snippets
+* David Nolens Snippets
 
   Most reliable way to add David Nolen's [[http://github.com/swannodette/clojure-snippets][clojure-snippets]] collection
   to [[https://github.com/capitaomorte/yasnippet][Yasnippets]], is simply to clone the repository into my =snippets=
   directory:
 
-  #+BEGIN_SRC sh
+  #+BEGIN_SRC sh  :tangle no
     git clone http://github.com/swannodette/clojure-snippets snippets/clojure-mode
   #+END_SRC
 
@@ -88,11 +89,29 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
   The [[https://github.com/clojure-emacs/clojure-mode][clojure-mode]] project seems to be the best (and works well with [[*Cider][Cider]]).
 
   #+BEGIN_SRC elisp
+
+   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   ;; inferior lisp
+   ;;(setq inferior-lisp-program "lein figwheel")
+
+   ;; inf-clojure test
+   ;(use-package inf-clojure
+   ;  :ensure t
+   ;  )
+
+   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   ;; inf-clojure
+
+   ;(setq inf-clojure-program "lein figwheel")
+   ;; minor-mode adds key-bindings
+   ;(add-hook 'clojure-mode-hook 'inf-clojure-minor-mode)
+
        (use-package clojure-mode
          :ensure t
          :mode (("\\.edn$" . clojure-mode )
-                ("\\.boot$" . clojure-mode))
-         :diminish
+                ("\\.boot$" . clojure-mode)
+                )
+         :delight "clj"
          :init
          (defconst clojure--prettify-symbols-alist
            '(("fn"   . ?λ)
@@ -101,20 +120,39 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
          :config
          (add-hook 'clojure-mode-hook 'global-prettify-symbols-mode)
          :bind (("C-c d f" . cider-code)
-                ("C-c d g" . cider-grimoire)
-                ("C-c d w" . cider-grimoire-web)
-                ("C-c d c" . clojure-cheatsheet)
-                ("C-c d d" . dash-at-point)))
+  ))
+
+  (setq cider-cljs-lein-repl
+      "(cond
+   (and (resolve 'user/run) (resolve 'user/browser-repl)) ;; Chestnut projects
+   (eval '(do (user/run)
+             (user/browser-repl)))
+
+   (try
+    (require 'figwheel-sidecar.repl-api)
+    (resolve 'figwheel-sidecar.repl-api/start-figwheel!)
+    (catch Throwable _))
+   (eval '(do (figwheel-sidecar.repl-api/start-figwheel!)
+             (figwheel-sidecar.repl-api/cljs-repl)))
+
+   (try
+    (require 'cemerick.piggieback)
+    (resolve 'cemerick.piggieback/cljs-repl)
+    (catch Throwable _))
+   (eval '(cemerick.piggieback/cljs-repl (cljs.repl.rhino/repl-env)))
+
+   :else
+   (throw (ex-info \"Failed to initialise CLJS repl. Add com.cemerick/piggieback and optionally figwheel-sidecar to your project.\" {})))")
+
   #+END_SRC
 
-  Need to figure out how to get the color identifiers mode to work
-  without an error:
+  Use rainbow-delimiters for highlighting
 
   #+BEGIN_SRC elisp
-    (use-package color-identifiers-mode
+    (use-package rainbow-delimiters
       :ensure t
       :init
-      (add-hook 'clojure-mode-hook 'color-identifiers-mode))
+      (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))
   #+END_SRC
 
 * Indenting
@@ -158,9 +196,9 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
     )
   #+END_SRC
 
-* Paredit
+* SmartParens
 
-  All Lisps, including Clojure, should use [[http://www.emacswiki.org/emacs/ParEdit][paredit]].
+  All Lisps, including Clojure, should use [[https://www.github.com/Fuco1/smartparens][smartparens]].
 
   Since it’s currently possible to use something like =join-lines=
   to pull code up from one line and stick it into the end-of-line
@@ -168,7 +206,7 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
   replacement for [[help:delete-indentation][delete-indentation]] prevents this.
 
   #+BEGIN_SRC elisp
-    (defun paredit-delete-indentation (&optional arg)
+    (defun smartparens-delete-indentation (&optional arg)
       "Handle joining lines that end in a comment."
       (interactive "*P")
       (let (comt)
@@ -189,7 +227,7 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
   it all.
 
   #+BEGIN_SRC elisp
-    (defun paredit-remove-newlines ()
+    (defun smartparens-remove-newlines ()
       "Removes extras whitespace and newlines from the current point
     to the next parenthesis."
       (interactive)
@@ -197,19 +235,23 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
             (from (re-search-forward "[])}]")))
          (backward-char)
          (while (> (point) up-to)
-           (paredit-delete-indentation))))
+           (smartparens-delete-indentation))))
   #+END_SRC
 
   Bind these previous functions (ESC-^ delete indentation, CTRL-^
   remove-newlines) and add it to the =clojure-mode=:
 
   #+BEGIN_SRC elisp
-    (use-package paredit
-      :bind ("M-^" . paredit-delete-indentation)
-      :bind ("C-^" . paredit-remove-newlines)
-      :diminish {}
+    (use-package smartparens-config
+      :ensure smartparens
+      :bind ("M-^" . smartparens-delete-indentation)
+      :bind ("C-^" . smartparens-remove-newlines)
+      :config
+          (progn (show-smartparens-global-mode t))
       :init
-      (add-hook 'clojure-mode-hook 'paredit-mode))
+      (add-hook 'clojure-mode-hook 'turn-on-smartparens-strict-mode))
+
+  (add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
   #+END_SRC
 
   Useful key sequences for positioning cursor on particular s-expressions:
@@ -218,6 +260,27 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
        declaration. Good start to just about any other positioning.
   - C-M- d f d :: At beginning of function, moves to first s-expression.
 
+* ParInfer
+  #+BEGIN_SRC elisp :tangle no
+(use-package parinfer
+  :ensure t
+  :bind
+  (("C-," . parinfer-toggle-mode))
+  :init
+  (progn
+    (setq parinfer-extensions
+          '(defaults       ; should be included.
+            pretty-parens  ; different paren styles for different modes.
+        ;;    lispy          ; If you use Lispy. With this extension, you should install Lispy and do not enable lispy-mode directly.
+            paredit        ; Introduce some paredit commands.
+            smart-tab      ; C-b & C-f jump positions and smart shift with tab & S-tab.
+            smart-yank))   ; Yank behaviour depend on mode.
+    (add-hook 'clojure-mode-hook #'parinfer-mode)
+    (add-hook 'emacs-lisp-mode-hook #'parinfer-mode)
+    (add-hook 'common-lisp-mode-hook #'parinfer-mode)
+    (add-hook 'scheme-mode-hook #'parinfer-mode)
+    (add-hook 'lisp-mode-hook #'parinfer-mode)))
+  #+END_SRC
 * REPL
 
   When demonstrating Clojure, I find it is a better approach is to send
@@ -238,6 +301,20 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
       (cider-repl-closing-return)
       (cider-switch-to-last-clojure-buffer)
       (message ""))
+
+    (setq cider-cljs-lein-repl
+        "(do (use 'figwheel-sidecar.repl-api) (start-figwheel!) (cljs-repl))")
+
+
+;; nREPL customisations
+(setq nrepl-hide-special-buffers t)                                        ; Don't show buffers like connection or server
+(setq nrepl-popup-on-error nil)                                            ; Don't popup new buffer for errors (show in nrepl buffer)
+(setq nrepl-popup-stacktraces-in-repl t)                                   ; Display stacktrace inline
+
+(add-hook 'nrepl-interaction-mode-hook 'nrepl-turn-on-eldoc-mode)          ; Enable eldoc - shows fn argument list in echo area
+(add-hook 'nrepl-mode-hook 'paredit-mode)                                  ; Use paredit in *nrepl* buffer
+
+(add-to-list 'same-window-buffer-names "*nrepl*")                          ; Make C-c C-z switch to *nrepl*
   #+END_SRC
 
 * Cider
@@ -256,19 +333,24 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
 
       :init
       (setq cider-auto-select-error-buffer t
-            cider-repl-pop-to-buffer-on-connect nil
+            ;; go right to the REPL buffer when it's finished connecting
+            cider-repl-pop-to-buffer-on-connect t
             cider-repl-use-clojure-font-lock t
+            ;; Wrap when navigating history.
             cider-repl-wrap-history t
             cider-repl-history-size 1000
+            ;; When there's a cider error, show its buffer and switch to it
             cider-show-error-buffer t
+            cider-auto-select-error-buffer t
             nrepl-hide-special-buffers t
             ;; Stop error buffer from popping up while working in buffers other than the REPL:
             nrepl-popup-stacktraces nil
+            ;; Where to store the cider history.
+            cider-repl-history-file "~/.emacs.d/cider-history"
             )
-
   ;;    (add-hook 'cider-mode-hook 'cider-turn-on-eldoc-mode)
   ;;    (add-hook 'cider-mode-hook 'company-mode)
-
+      ;; enable paredit in your REPL
       (add-hook 'cider-repl-mode-hook 'paredit-mode)
       (add-hook 'cider-repl-mode-hook 'superword-mode)
    ;;   (add-hook 'cider-repl-mode-hook #'company-mode)
@@ -357,152 +439,6 @@ The following instructions create a fully blinged-out Emacs-Clojure setup.
 
   Of course, the /real problem/ is trying to remember all the
   [[https://github.com/clojure-emacs/clj-refactor.el/wiki][refactoring options]]. Remember: =C-c . h h=
-
-* 4Clojure
-
-  Finally, if you are just learning Clojure, check out [[http://www.4clojure.com/][4Clojure]] and then
-  install [[https://github.com/joshuarh/4clojure.el][4clojure-mode]].
-
-  #+BEGIN_SRC elisp :tangle no
-    (use-package 4clojure
-      :init
-      (bind-key "<f9> a" '4clojure-check-answers clojure-mode-map)
-      (bind-key "<f9> n" '4clojure-next-question clojure-mode-map)
-      (bind-key "<f9> p" '4clojure-previous-question clojure-mode-map)
-
-      :config
-      (defadvice 4clojure-open-question (around 4clojure-open-question-around)
-         "Start a cider/nREPL connection if one hasn't already been started when
-         opening 4clojure questions."
-         ad-do-it
-         (unless cider-current-clojure-buffer
-           (cider-jack-in))))
-  #+END_SRC
-
-** Endless Questions
-
-  Got some good /advice/ from [[http://endlessparentheses.com/be-a-4clojure-hero-with-emacs.html][Endless Parens]] for dealing with
-  4Clojure:
-
-  #+BEGIN_SRC elisp :tangle no
-     (defun endless/4clojure-check-and-proceed ()
-       "Check the answer and show the next question if it worked."
-       (interactive)
-       (unless
-           (save-excursion
-             ;; Find last sexp (the answer).
-             (goto-char (point-max))
-             (forward-sexp -1)
-             ;; Check the answer.
-             (cl-letf ((answer
-                        (buffer-substring (point) (point-max)))
-                       ;; Preserve buffer contents, in case you failed.
-                       ((buffer-string)))
-               (goto-char (point-min))
-               (while (search-forward "__" nil t)
-                 (replace-match answer))
-               (string-match "failed." (4clojure-check-answers))))
-         (4clojure-next-question)))
-  #+END_SRC
-
-  And:
-
-  #+BEGIN_SRC elisp :tangle no
-     (defadvice 4clojure/start-new-problem
-         (after endless/4clojure/start-new-problem-advice () activate)
-         ;; Prettify the 4clojure buffer.
-       (goto-char (point-min))
-       (forward-line 2)
-       (forward-char 3)
-       (fill-paragraph)
-       ;; Position point for the answer
-       (goto-char (point-max))
-       (insert "\n\n\n")
-       (forward-char -1)
-       ;; Define our key.
-       (local-set-key (kbd "M-j") #'endless/4clojure-check-and-proceed))
-  #+END_SRC
-
-** Question Saving?
-
-  I really should advice the =4clojure-next-question= to store the
-  current question ... and then we can pop back to that and resume
-  where we left off.
-
-  We need a file where we can save our current question:
-
-  #+BEGIN_SRC elisp :tangle no
-   (defvar ha-4clojure-place-file (concat user-emacs-directory "4clojure-place.txt"))
-  #+END_SRC
-
-  Read a file's contents as a buffer by specifying the file. For
-  this, we use a temporary buffer, so that we don't have to worry
-  about saving it.
-
-  #+BEGIN_SRC elisp :tangle no
-  (defun ha-file-to-string (file)
-    "Read the contents of FILE and return as a string."
-    (with-temp-buffer
-      (insert-file-contents file)
-      (buffer-substring-no-properties (point-min) (point-max))))
-  #+END_SRC
-
-  Parse a file into separate lines and return a list.
-
-  #+BEGIN_SRC elisp :tangle no
-    (defun ha-file-to-list (file)
-      "Return a list of lines in FILE."
-      (split-string (ha-file-to-string file) "\n" t))
-  #+END_SRC
-
-  We create a wrapper function that reads our previous "place"
-  question and then calls the open question function.
-
-  #+BEGIN_SRC elisp :tangle no
-     (defun ha-4clojure-last-project (file)
-       (interactive "f")
-       (if (file-exists-p file)
-           (car (ha-file-to-list file))
-         "1"))
-
-     (defun 4clojure-start-session ()
-       (interactive)
-       (4clojure-open-question
-        (ha-4clojure-last-project ha-4clojure-place-file)))
-
-     (global-set-key (kbd "<f2> s") '4clojure-start-session)
-  #+END_SRC
-
-  Write a value to a file. Making this interactive makes for an
-  interesting use case...we'll see if I use that.
-
-  #+BEGIN_SRC elisp :tangle no
-     (defun ha-string-to-file (string file)
-       (interactive "sEnter the string: \nFFile to save to: ")
-       (with-temp-file file
-         (insert string)))
-  #+END_SRC
-
-  Whenever we load a 4clojure project or go to the next one, we store
-  the project number to our "place" file:
-
-  #+BEGIN_SRC elisp :tangle no
-   (when (package-installed-p '4clojure)
-     (defun ha-4clojure-store-place (num)
-         (ha-string-to-file (int-to-string num) ha-4clojure-place-file))
-
-     (defadvice 4clojure-next-question (after ha-4clojure-next-question)
-       "Save the place for each question you progress to."
-       (ha-4clojure-store-place (4clojure/problem-number-of-current-buffer)))
-
-     (defadvice 4clojure-open-question (after ha-4clojure-next-question)
-       "Save the place for each question you progress to."
-       (ha-4clojure-store-place (4clojure/problem-number-of-current-buffer)))
-
-     (ad-activate '4clojure-next-question)
-     (ad-activate '4clojure-open-question))
-     ;; Notice that we don't advice the previous question...
-  #+END_SRC
 
 * Technical Artifacts
 
