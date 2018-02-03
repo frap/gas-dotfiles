@@ -212,6 +212,48 @@ display features of my emacs config.
        :diminish auto-fill-mode)
    #+END_SRC
 
+** Pretty Code
+replace lambdas fns with cool signs :)
+#+BEGIN_SRC emacs-lisp
+   ;; ----- Base set of pretty symbols.
+   (defvar base-prettify-symbols-alist '(("<=" . ?≤)
+                                      (">=" . ?≥)
+                                      ("<-" . ?←)
+                                      ("->" . ?→)
+                                      ("<=" . ?⇐)
+                                      ("=>" . ?⇒)
+                                      ("lambda" . ?λ)
+                    ))
+
+
+   (Defun atea-lisp-prettify-symbols-hook ()
+    "Set pretty symbols for lisp modes."
+     (setq prettify-symbols-alist base-prettify-symbols-alist))
+
+   (defun atea-js-prettify-symbols-hook ()
+     "Set pretty symbols for JavaScript."
+     (setq prettify-symbols-alist
+        (append '(("function" . ?ƒ)) base-prettify-symbols-alist)))
+
+   (defun atea-clj-prettify-symbols-hook ()
+     "Set pretty symbols for Clojure(script)."
+     (setq prettify-symbols-alist
+        (append '(("fn" . λ)) base-prettify-symbols-alist)))
+
+   (defun other-prettify-symbols-hook ()
+     "Set pretty symbols for non-lisp programming modes."
+     (setq prettify-symbols-alist
+        (append '(("==" . ?≡)
+                           ("!=" . ?≠))
+             base-prettify-symbols-alist)))
+
+;; Hook 'em up.
+(add-hook 'emacs-lisp-mode-hook #'atea-lisp-prettify-symbols-hook)
+(add-hook 'web-mode-hook        #'other-prettify-symbols-hook)
+(add-hook 'js-mode-hook         #'atea-js-prettify-symbols-hook)
+(add-hook 'prog-mode-hook       #'other-prettify-symbols-hook)
+(add-hook 'clojure-mode-hook    #'atea-clj-prettify-symbols-hook)
+#+END_SRC
 
 * Technical Artifacts
 
